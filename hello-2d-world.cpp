@@ -115,15 +115,30 @@ void MyApp::destroyBufferObjects() {
 
 ////////////////////////////////////////////////////////////////////////// SCENE
 
+//OPERATION ORDER: SCALE -> ROTATE -> TRANSLATE
+// TRANSLATE(ROTATE(SCALE(MATRIX)))
+
 //Identity Matrix
-const glm::mat4 I(1.0f);
-//Orange Triangle position Operations
+//const glm::mat4 I(1.0f);
+
+//Orange Triangle (DONE)
 const glm::mat4 OrangeTri =
-glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, -1.0f, 0.0f)),
-    glm::vec3(1.2f,0.8f,1.0f));
-//Blue Large Triangle position Operations
-const glm::mat4 BlueTri =
+glm::translate(glm::scale(glm::mat4(1.0f), glm::vec3(1.2f, 0.8f, 1.0f)),
+    glm::vec3(-0.7f, -1.0f, 1.0f));
+
+//Large Blue Triangle (TODO)
+const glm::mat4 LargeBlueTri =
 glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+
+//Large Pink Triangle (TODO)
+const glm::mat4 LargePinkTri =
+glm::translate(
+    glm::rotate(glm::mat4(1.0f), 45.0f, glm::vec3(1.0f, 1.0f, 1.0f)),
+    glm::vec3(0.0f,-1.0f,0.0f));
+//glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f)),
+//    glm::radians(60.0f),
+//    glm::vec3(1.0f,1.0f,0.0f));
+
 
 void MyApp::drawScene() {
     // Drawing directly in clip space
@@ -131,17 +146,24 @@ void MyApp::drawScene() {
     glBindVertexArray(VaoId);
     Shaders->bind();
 
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(I));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
-        reinterpret_cast<GLvoid*>(0));
+    //Test included in base file
+    //acts as example of how to display a triangle on the clip space
+    //glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(I));
+    //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
+    //    reinterpret_cast<GLvoid*>(0));
 
     //Drawing Orange Triangle
     glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(OrangeTri));
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
         reinterpret_cast<GLvoid*>(0));
 
-    //Drawing Large Blue Triangle (TODO)
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(BlueTri));
+    //Drawing Large Blue Triangle
+    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(LargeBlueTri));
+    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
+        reinterpret_cast<GLvoid*>(0));
+
+    //Drawing Large Pink Triangle
+    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(LargePinkTri));
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
         reinterpret_cast<GLvoid*>(0));
 
