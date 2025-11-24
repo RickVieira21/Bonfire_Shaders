@@ -21,6 +21,13 @@
 #include <memory>
 
 #include "../mgl/mgl.hpp"
+#include "Vertex.h"
+#include "shape.cpp"
+
+Shape* baseTriangle;
+Shape* baseSquare;
+Shape* baseParallelogram;
+
 
 ////////////////////////////////////////////////////////////////////////// MYAPP
 
@@ -64,18 +71,34 @@ void MyApp::createShaderProgram() {
 
 //////////////////////////////////////////////////////////////////// VAOs & VBOs
 
-typedef struct {
-    GLfloat XYZW[4];
-    GLfloat RGBA[4];
-} Vertex;
 
-const Vertex Vertices[] = {
-    {{0.25f, 0.25f, 0.0f, 1.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
-    {{0.75f, 0.25f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
-    {{0.50f, 0.75f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}} };
+// Base Right Triangle (unitário 2D)
+const Vertex RightTriangleVertices[] = {
+    {{0.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},  // bottom-left
+    {{1.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},  // bottom-right
+    {{0.0f, 1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}   // top-left
+};
+const GLubyte RightTriangleIndices[] = { 0, 1, 2 };
 
-const GLubyte Indices[] = { 0, 1, 2 };
+// Square (2 triângulos)
+const Vertex SquareVertices[] = {
+    {{0.0f, 0.0f, 0.0f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}},
+    {{1.0f, 0.0f, 0.0f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}},
+    {{1.0f, 1.0f, 0.0f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}},
+    {{0.0f, 1.0f, 0.0f, 1.0f}, {0.1f, 0.8f, 0.1f, 1.0f}}
+};
+const GLubyte SquareIndices[] = { 0, 1, 2, 0, 2, 3 };
 
+// Parallelogram (2 triângulos)
+const Vertex ParallelogramVertices[] = {
+    {{0.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f}},
+    {{1.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f}},
+    {{0.75f, 1.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f}},
+    {{-0.25f, 1.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f}}
+};
+const GLubyte ParallelogramIndices[] = { 0, 1, 2, 0, 2, 3 };
+
+/*
 void MyApp::createBufferObjects() {
     glGenVertexArrays(1, &VaoId);
     glBindVertexArray(VaoId);
@@ -105,6 +128,7 @@ void MyApp::createBufferObjects() {
     glDeleteBuffers(2, VboId);
 }
 
+*/
 void MyApp::destroyBufferObjects() {
     glBindVertexArray(VaoId);
     glDisableVertexAttribArray(POSITION);
@@ -118,8 +142,7 @@ void MyApp::destroyBufferObjects() {
 //OPERATION ORDER: SCALE -> ROTATE -> TRANSLATE
 // TRANSLATE(ROTATE(SCALE(MATRIX)))
 
-//Identity Matrix
-//const glm::mat4 I(1.0f);
+/*
 
 
 //Small Orange Triangle (DONE!)
@@ -167,65 +190,45 @@ glm::translate(
 
 //Green Square
 
-
-
 //Orange Parallelogram
-
+*/
 
 
 
 void MyApp::drawScene() {
     // Drawing directly in clip space
-
-    glBindVertexArray(VaoId);
     Shaders->bind();
 
-    //Test included in base file
-    //acts as example of how to display a triangle on the clip space
-    //glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(I));
-    //glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
-    //    reinterpret_cast<GLvoid*>(0));
+    // Pequeno Triângulo Laranja
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-0.7f, -1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+    baseTriangle->draw(MatrixId, model);
 
-    //Drawing Small Orange Triangle
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(OrangeTri));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
-        reinterpret_cast<GLvoid*>(0));
-
-    //Drawing Small Blue Triangle
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(BlueTri));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid*>(0));
-
-    //Drawing Large Blue Triangle
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(LargeBlueTri));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
-        reinterpret_cast<GLvoid*>(0));
-
-    //Drawing Large Pink Triangle
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(LargePinkTri));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE,
-        reinterpret_cast<GLvoid*>(0));
-
-    //Medium Purple Triangle
-    glUniformMatrix4fv(MatrixId, 1, GL_FALSE, glm::value_ptr(MediumTri));
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid*>(0));
-
-    //Green Square
-
-
-    //Orange Parallelogram
-
-
+    // Pequeno Triângulo Azul
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(0.8f, -1.0f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 1.0f));
+    baseTriangle->draw(MatrixId, model);
 
     Shaders->unbind();
-    glBindVertexArray(0);
 }
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
+
 void MyApp::initCallback(GLFWwindow* win) {
-    createBufferObjects();
-    createShaderProgram();
+    createShaderProgram(); // Mantém o shader
+
+    // Criar shapes base
+    baseTriangle = new Shape(RightTriangleVertices, sizeof(RightTriangleVertices),
+        RightTriangleIndices, sizeof(RightTriangleIndices));
+
+    baseSquare = new Shape(SquareVertices, sizeof(SquareVertices),
+        SquareIndices, sizeof(SquareIndices));
+
+    baseParallelogram = new Shape(ParallelogramVertices, sizeof(ParallelogramVertices),
+        ParallelogramIndices, sizeof(ParallelogramIndices));
 }
+
 
 void MyApp::windowCloseCallback(GLFWwindow* win) { destroyBufferObjects(); }
 
@@ -241,7 +244,7 @@ int main(int argc, char* argv[]) {
     mgl::Engine& engine = mgl::Engine::getInstance();
     engine.setApp(new MyApp());
     engine.setOpenGL(4, 6);
-    engine.setWindow(600, 600, "Hello Modern 2D World", 0, 1);
+    engine.setWindow(600, 600, "Group 5 - Tortoise Tangram", 0, 1);
     engine.init();
     engine.run();
     exit(EXIT_SUCCESS);

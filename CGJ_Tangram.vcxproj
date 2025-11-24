@@ -23,6 +23,10 @@
     <ClCompile Include="Libraries\mgl\mglApp.cpp" />
     <ClCompile Include="Libraries\mgl\mglError.cpp" />
     <ClCompile Include="Libraries\mgl\mglShader.cpp" />
+    <ClCompile Include="shape.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
