@@ -166,7 +166,7 @@ void MyApp::drawScene() {
 
     // Pequeno Triângulo Vermelho 
     glm::mat4 model =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-0.31f, 0.11f, 0.0f)) *
+        glm::translate(glm::mat4(1.0f), glm::vec3(-0.311f, 0.111f, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(-135.0f), glm::vec3(0, 0, 1)) * // (135º para a direita)
         glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.0f));
 
@@ -176,19 +176,19 @@ void MyApp::drawScene() {
 
     // Pequeno Triângulo Azul
     model = 
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.7f, 0.11f, 0.0f)) *
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.711f, 0.111f, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(-135.0f), glm::vec3(0, 0, 1)) * 
         glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.0f));
 
-    glUniform4f(ColorId, 0.0f, 0.4f, 1.0f, 1.0f); // azul
+    glUniform4f(ColorId, 0.0f, 0.502f, 0.502f, 1.0f); // azul
     baseTriangle->draw(MatrixId, model);
 
 
     // Médio Triângulo Roxo
     model =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.787f, 0.199f, 0.0f)) *
+        glm::translate(glm::mat4(1.0f), glm::vec3(0.8f, 0.2f, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(135.0f), glm::vec3(0, 0, 1)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.425f, 0.425f, 1.0f));
+        glm::scale(glm::mat4(1.0f), glm::vec3(0.423f, 0.423f, 1.0f));
 
     glUniform4f(ColorId, 0.35f, 0.0f, 0.5f, 1.0f); // roxo
     baseTriangle->draw(MatrixId, model);
@@ -206,7 +206,19 @@ void MyApp::drawScene() {
     glUniform4f(ColorId, 1.0f, 0.5f, 0.0f, 1.0f); // laranja
     baseParallelogram->draw(MatrixId, model);
 
+    // Triângulo Rosa Largo
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-0.1f, 0.5f, 0.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0, 0, 1))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(0.6f, 0.6f, 1.0f));
+    glUniform4f(ColorId, 0.7f, 0.0f, 0.3f, 1.0f); // Rosa
+    baseTriangle->draw(MatrixId, model);
 
+    // Triângulo Azul-claro Largo
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, -0.1f, 0.0f))
+        * glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0, 0, 1))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(0.6f, 0.6f, 1.0f));
+    glUniform4f(ColorId, 0.3f, 0.4f, 1.0f, 1.0f); // Azul-Claro
+    baseTriangle->draw(MatrixId, model);
 
     Shaders->unbind();
 }
