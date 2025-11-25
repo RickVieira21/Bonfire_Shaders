@@ -110,10 +110,10 @@ const GLubyte SquareIndices[] = { 0, 1, 2, 0, 2, 3 };
 const Vertex ParallelogramVertices[] = {        //Tudo branco
     {{0.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
     {{1.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
-    {{0.75f, 1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
-    {{-0.25f, 1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}
+    {{0.0f, 1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}},
+    {{1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 1.0f}}
 };
-const GLubyte ParallelogramIndices[] = { 0, 1, 2, 0, 2, 3 };
+const GLubyte ParallelogramIndices[] = { 0, 1, 2, 0, 3, 1};
 
 /*
 void MyApp::createBufferObjects() {
@@ -166,7 +166,7 @@ void MyApp::drawScene() {
 
     // Pequeno Triângulo Vermelho 
     glm::mat4 model =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-0.3f, 0.1f, 0.0f)) *
+        glm::translate(glm::mat4(1.0f), glm::vec3(-0.31f, 0.11f, 0.0f)) *
         glm::rotate(glm::mat4(1.0f), glm::radians(-135.0f), glm::vec3(0, 0, 1)) * // (135º para a direita)
         glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.0f));
 
@@ -201,8 +201,8 @@ void MyApp::drawScene() {
     baseSquare->draw(MatrixId, model);
 
     // Paralelogramo Laranja
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f))
-        * glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 0.5f, 1.0f));
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-0.4f, 0.2f, 0.0f))
+        * glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.0f));
     glUniform4f(ColorId, 1.0f, 0.5f, 0.0f, 1.0f); // laranja
     baseParallelogram->draw(MatrixId, model);
 
