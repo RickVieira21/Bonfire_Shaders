@@ -29,6 +29,10 @@
     <ClCompile Include="Libraries\mgl\mglError.cpp" />
     <ClCompile Include="Libraries\mgl\mglMesh.cpp" />
     <ClCompile Include="Libraries\mgl\mglShader.cpp" />
+    <ClCompile Include="Libraries\mgl\OrbitalCamera.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Libraries\mgl\OrbitalCamera.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

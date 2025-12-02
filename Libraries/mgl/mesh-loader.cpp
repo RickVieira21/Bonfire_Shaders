@@ -10,6 +10,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "../mgl/mgl.hpp"
+#include "OrbitalCamera.hpp"
 
 ////////////////////////////////////////////////////////////////////////// MYAPP
 
@@ -31,6 +32,11 @@ private:
   void createCamera();
   void drawScene();
 };
+
+OrbitalCamera* cam1;
+OrbitalCamera* cam2;
+OrbitalCamera* activeCam;
+
 
 ///////////////////////////////////////////////////////////////////////// MESHES
 
@@ -105,8 +111,15 @@ const glm::mat4 ProjectionMatrix2 =
 
 void MyApp::createCamera() {
   Camera = new mgl::Camera(UBO_BP);
-  Camera->setViewMatrix(ViewMatrix2);
-  Camera->setProjectionMatrix(ProjectionMatrix1);
+//  Camera->setViewMatrix(ViewMatrix2);
+//  Camera->setProjectionMatrix(ProjectionMatrix1);
+
+  cam1 = new OrbitalCamera(glm::vec3(0, 0, 0), 10.0f);
+  cam2 = new OrbitalCamera(glm::vec3(0, 0, 0), 15.0f);
+  activeCam = cam1; 
+
+  Camera->setViewMatrix(activeCam->getViewMatrix());
+  Camera->setProjectionMatrix(activeCam->getProjectionMatrix(800.0f / 600.0f));
 }
 
 /////////////////////////////////////////////////////////////////////////// DRAW
@@ -129,8 +142,9 @@ void MyApp::initCallback(GLFWwindow *win) {
 }
 
 void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
-  glViewport(0, 0, winx, winy);
-  // change projection matrices to maintain aspect ratio
+    glViewport(0, 0, winx, winy);
+    float aspect = float(winx) / float(winy);
+    Camera->setProjectionMatrix(activeCam->getProjectionMatrix(aspect));
 }
 
 void MyApp::displayCallback(GLFWwindow *win, double elapsed) { drawScene(); }
