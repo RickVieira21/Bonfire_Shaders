@@ -6,9 +6,16 @@ OrbitalCamera::OrbitalCamera(const glm::vec3& c, float d)
     : center(c), distance(d), rotation(glm::quat(1, 0, 0, 0)) {}
 
 glm::mat4 OrbitalCamera::getViewMatrix() const {
-    glm::vec3 offset = rotation * glm::vec3(0, 0, distance);
-    return glm::lookAt(center + offset, center, glm::vec3(0, 1, 0));
+    // camera offset (pointing from center to camera)
+    glm::vec3 offset = rotation * glm::vec3(0.0f, 0.0f, distance);
+    glm::vec3 camPos = center + offset;
+
+    // Cam own up vector (so it can flip)
+    glm::vec3 camUp = glm::normalize(rotation * glm::vec3(0.0f, 1.0f, 0.0f));
+
+    return glm::lookAt(camPos, center, camUp);
 }
+
 
 glm::mat4 OrbitalCamera::getProjectionMatrix(float aspect) const {
     if (perspective) { //PERSPECTIVE

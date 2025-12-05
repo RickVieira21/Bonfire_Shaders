@@ -32,6 +32,8 @@
     <ClCompile Include="Libraries\mgl\OrbitalCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Libraries\mgl\mgl.hpp" />
+    <ClInclude Include="Libraries\mgl\mglApp.hpp" />
     <ClInclude Include="Libraries\mgl\OrbitalCamera.hpp" />
     <ClInclude Include="Libraries\mgl\SceneNode.hpp" />
   </ItemGroup>

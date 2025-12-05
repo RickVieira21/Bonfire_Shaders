@@ -52,5 +52,11 @@
     <ClInclude Include="Libraries\mgl\SceneNode.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Libraries\mgl\mgl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\mgl\mglApp.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

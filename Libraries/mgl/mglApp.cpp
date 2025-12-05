@@ -144,7 +144,7 @@ void Engine::setupOpenGL() {
   glDepthMask(GL_TRUE);
   glDepthRange(0.0, 1.0);
   glClearDepth(1.0);
-  glEnable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   glFrontFace(GL_CCW);
   glViewport(0, 0, WindowWidth, WindowHeight);
