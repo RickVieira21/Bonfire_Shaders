@@ -8,10 +8,12 @@
 // MODEL DATA, ASSIMP, mglMesh.hpp
 //
 ////////////////////////////////////////////////////////////////////////////////
-
+#define GLM_ENABLE_EXPERIMENTAL
 #include "../mgl/mgl.hpp"
 #include "OrbitalCamera.hpp"
 #include "SceneNode.hpp"
+#include <iostream>
+
 
 ////////////////////////////////////////////////////////////////////////// MYAPP
 
@@ -34,7 +36,6 @@ private:
   SceneNode* rootNode = nullptr;
   SceneNode* tableNode = nullptr;
 
-
   void createMeshes();
   void createShaderPrograms();
   void createCamera();
@@ -49,6 +50,7 @@ OrbitalCamera* activeCam;
 double lastX, lastY;
 bool rightPressed = false;
 bool leftPressed = false;
+std::vector<SceneNode*> pieceNodes; // filled on initCallback
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -136,7 +138,7 @@ void MyApp::createCamera() {
   Camera->setProjectionMatrix(activeCam->getProjectionMatrix(800.0f / 600.0f));
 }
 
-/////////////////////////////////////////////////////////////////////////// DRAW
+/////////////////////////////////////////////////////////////////////////// DRAW AND CONFIGURATIONS
 
 glm::mat4 ModelMatrix(1.0f);
 
@@ -146,6 +148,42 @@ void MyApp::drawScene() {
   //Mesh->draw();
   //Shaders->unbind();
   rootNode->draw(glm::mat4(1.0f));
+}
+
+
+void createConfigurations() {
+    std::vector<glm::mat4> pickagramMatrices;
+    for (auto p : pieceNodes) {
+        pickagramMatrices.push_back(p->modelMatrix); 
+    }
+
+    // box configuration: example layout on XZ plane (positions are local to table)
+    std::vector<glm::mat4> boxMatrices;
+    // ADJUST
+    std::vector<glm::vec3> boxPositions = {
+        {-0.6f, 0.01f, -0.6f}, {0.0f, 0.01f, -0.6f}, {0.6f, 0.01f, -0.6f},
+        {-0.6f, 0.01f,  0.0f}, {0.6f, 0.01f,  0.0f}, {-0.6f, 0.01f,  0.6f},
+        {0.0f, 0.01f,  0.6f}
+    };
+
+    for (size_t i = 0; i < pieceNodes.size(); ++i) {
+        glm::vec3 pos = boxPositions[i % boxPositions.size()];
+        glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
+        // optionally rotate flat on table: rotate around X or Z to lie on XZ plane
+        glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0)); // lay flat
+        glm::mat4 finalM = M * R;
+        boxMatrices.push_back(finalM);
+    }
+
+    // Assign animation start/target for each piece:
+    for (size_t i = 0; i < pieceNodes.size(); ++i) {
+        SceneNode* node = pieceNodes[i];
+        glm::mat4 pickM = pickagramMatrices[i];
+        glm::mat4 boxM = boxMatrices[i];
+
+        node->setAnimationTargets(pickM, boxM, /*startProgress=*/1.0f, /*speed=*/0.8f);
+        //startProgress = 1 means currently at pickagram config.
+    }
 }
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
@@ -182,7 +220,10 @@ void MyApp::initCallback(GLFWwindow* win) {
         partNode->color = glm::vec3(1.0f, 0.0f + 0.1f * i, 0.0f + 0.1f * i);
 
         tableNode->addChild(partNode);
+        pieceNodes.push_back(partNode);
     }
+
+    createConfigurations();
 }
 
 
@@ -192,7 +233,10 @@ void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
     Camera->setProjectionMatrix(activeCam->getProjectionMatrix(aspect));
 }
 
-void MyApp::displayCallback(GLFWwindow *win, double elapsed) { drawScene(); }
+void MyApp::displayCallback(GLFWwindow *win, double elapsed) { 
+    rootNode->updateAnimation((float)elapsed);
+    drawScene(); 
+}
 
 
 void MyApp::mouseButtonCallback(GLFWwindow* win, int button, int action, int mods) {
@@ -214,6 +258,7 @@ void MyApp::mouseButtonCallback(GLFWwindow* win, int button, int action, int mod
             leftPressed = false;
         }
     }
+
 }
 
 void MyApp::cursorCallback(GLFWwindow* win, double xpos, double ypos) {
@@ -265,9 +310,25 @@ void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int 
         activeCam->toggleProjection();
         Camera->setProjectionMatrix(activeCam->getProjectionMatrix((float)width / height));
     }
+
+    // left arrow: animate toward box (progress -> 0), right arrow: animate toward pickagram (progress -> 1)
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        if (key == GLFW_KEY_LEFT) {
+            std::cout << "[LOG] LEFT key pressed -> animating toward box\n";
+            for (auto n : pieceNodes) n->commandAnimation(-1);
+        }
+        if (key == GLFW_KEY_RIGHT) {
+            std::cout << "[LOG] RIGHT key pressed -> animating toward pickagram\n";
+            for (auto n : pieceNodes) n->commandAnimation(+1);
+        }
+    }
+    else if (action == GLFW_RELEASE) {
+        if (key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) {
+            std::cout << "[LOG] Key released -> stopping animation\n";
+            for (auto n : pieceNodes) n->commandAnimation(0);
+        }
+    }
 }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////// MAIN
