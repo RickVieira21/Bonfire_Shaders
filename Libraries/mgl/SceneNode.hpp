@@ -10,7 +10,7 @@ public:
     mgl::Mesh* mesh = nullptr;
     mgl::ShaderProgram* shader = nullptr;
     glm::mat4 modelMatrix = glm::mat4(1.0f); // local transform (relative to parent)
-    glm::vec3 color = glm::vec3(1.0f); // base color
+    glm::vec3 color = glm::vec3(0.0f); // base color
     std::vector<SceneNode*> children;
     int submeshIndex = -1; // draw all meshes if -1, or a specific submesh
 

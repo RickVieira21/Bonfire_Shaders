@@ -110,6 +110,7 @@ void Mesh::processScene(const aiScene *scene) {
     Meshes[i].nIndices = scene->mMeshes[i]->mNumFaces * 3;
     Meshes[i].baseVertex = n_vertices;
     Meshes[i].baseIndex = n_indices;
+    Meshes[i].name = scene->mMeshes[i]->mName.C_Str();
 
     n_vertices += scene->mMeshes[i]->mNumVertices;
     n_indices += Meshes[i].nIndices;

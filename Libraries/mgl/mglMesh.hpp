@@ -73,6 +73,7 @@ private:
     unsigned int nIndices = 0;
     unsigned int baseIndex = 0;
     unsigned int baseVertex = 0;
+    std::string name;
   };
   std::vector<MeshData> Meshes;
 

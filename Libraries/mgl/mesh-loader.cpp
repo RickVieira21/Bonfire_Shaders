@@ -58,20 +58,6 @@ std::vector<SceneNode*> pieceNodes; // filled on initCallback
 void MyApp::createMeshes() {
   std::string mesh_dir = "assets/models/";
   std::string mesh_file = "Pickagram_Group05.obj";
-  // std::string mesh_file = "cube-v.obj";
-  // std::string mesh_file = "cube-vn-flat.obj";
-  // std::string mesh_file = "cube-vn-smooth.obj";
-  // std::string mesh_file = "cube-vt.obj";
-  // std::string mesh_file = "cube-vt2.obj";
-  // std::string mesh_file = "torus-vtn-flat.obj";
-  // std::string mesh_file = "torus-vtn-smooth.obj";
-  // std::string mesh_file = "suzanne-vtn-flat.obj";
-  // std::string mesh_file = "suzanne-vtn-smooth.obj";
-  // std::string mesh_file = "teapot-vn-flat.obj";
-  // std::string mesh_file = "teapot-vn-smooth.obj";
-  // std::string mesh_file = "bunny-vn-flat.obj";
-  // std::string mesh_file = "bunny-vn-smooth.obj";
-  // std::string mesh_file = "monkey-torus-vtn-flat.obj";
   std::string mesh_fullname = mesh_dir + mesh_file;
 
   Mesh = new mgl::Mesh();
@@ -157,20 +143,94 @@ void createConfigurations() {
         pickagramMatrices.push_back(p->modelMatrix); 
     }
 
+    struct RotationInstruction {
+        glm::vec3 axis;
+        float degrees;
+        int repeatCount;
+    };
+
     // box configuration: example layout on XZ plane (positions are local to table)
     std::vector<glm::mat4> boxMatrices;
-    // ADJUST
+    // Final positions of all pickagram shapes
     std::vector<glm::vec3> boxPositions = {
-        {-0.6f, 0.01f, -0.6f}, {0.0f, 0.01f, -0.6f}, {0.6f, 0.01f, -0.6f},
-        {-0.6f, 0.01f,  0.0f}, {0.6f, 0.01f,  0.0f}, {-0.6f, 0.01f,  0.6f},
-        {0.0f, 0.01f,  0.6f}
+        //Small Triangle 1
+        {-0.7f, 1.2f, 0.06f},
+        //Large Triangle 1
+        {0.78f, 0.6f, 0.0f}, 
+        //Parallelogram
+        {-0.5f, 0.6f, -0.6f},
+        //Small Triangle 2
+        {1.1f, 0.9f, 0.0f},
+        //Medium Triangle
+        {0.38f, 1.03f, 0.0f}, 
+        //Square
+        {-0.5f, 1.0f, 0.0f},
+        //Large Triangle 2
+        {-0.1f, 1.45f, -0.69f}
     };
+    std::vector<std::vector<RotationInstruction>> pieceRotationSequences = {
+
+        //Small Triangle 1
+        {
+            { {1,0,0}, 90.0f, 1 }
+        },
+        //Large Triangle 1
+        {
+            { {1,0,0}, 90.0f, 1 },
+            { {0,0,1}, 45.0f, 1 },
+        },
+        //Parallelogram
+        {
+            { {1,0,0}, 90.0f, 1 },
+            { {0,1,0}, 90.0f, 2 },
+            { {0,0,1}, 45.0f, 1 },
+        },
+        //Small Triangle 2
+        {
+            { {0,0,1}, 90.0f, 1 },
+            { {0,1,0}, 90.0f, 1 }
+        },
+        //Medium Triangle
+        {
+            { {0,1,0}, 135.0f, 1 },
+            { {1,0,0}, 90.0f, 1 },
+        },
+        //Square
+        {
+            { {0,1,0}, -135.0f, 1 },
+            { {1,0,0}, -90.0f, 1 },
+            { {0,1,0}, 180.0f, 1 },
+            { {1,0,0}, 180.0f, 1 },
+            { {0,1,0}, 180.0f, 1 },
+        },
+        //Large Triangle 2
+        {
+            { {1,0,0}, 90.0f, 1 },
+            { {0,0,1}, -45.0f, 1 },
+            { {0,1,0}, 180.0f, 1 },
+            { {0,0,1}, 90.0f, 1 },
+        }
+    };
+
+
 
     for (size_t i = 0; i < pieceNodes.size(); ++i) {
         glm::vec3 pos = boxPositions[i % boxPositions.size()];
         glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
-        // optionally rotate flat on table: rotate around X or Z to lie on XZ plane
-        glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1, 0, 0)); // lay flat
+        glm::mat4 R = glm::mat4(1.0f);
+        //
+        // Get this piece’s rotation steps
+        const auto& steps = pieceRotationSequences[i];
+
+        // Apply all steps in order
+        for (const RotationInstruction& step : steps) {
+            glm::vec3 axis = glm::normalize(step.axis);
+
+            for (int k = 0; k < step.repeatCount; ++k) {
+                R = glm::rotate(glm::mat4(1.0f), glm::radians(step.degrees), axis) * R;
+            }
+        }
+        //glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(boxRadiansRotations[i]), boxAxisRotations[i]);
         glm::mat4 finalM = M * R;
         boxMatrices.push_back(finalM);
     }
@@ -186,12 +246,31 @@ void createConfigurations() {
     }
 }
 
+
+
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
 void MyApp::initCallback(GLFWwindow* win) {
     createMeshes();
     createShaderPrograms();
     createCamera();
+
+    std::vector<glm::vec3> pickagramColors = {
+    //Small Triangle 1
+    {0.0f, 0.502f, 1.0f},
+    //Large Triangle 1
+    {0.3f, 0.4f, 1.0f},
+    //Parallelogram
+    {1.0f, 0.5f, 0.0f},
+    //Small Triangle 2
+    {1.0f, 0.0f, 0.0f},
+    //Medium Triangle
+    {0.35f, 0.0f, 0.5f},
+    //Square
+    {0.1f, 0.8f, 0.2f},
+    //Large Triangle 2
+    {0.7f, 0.0f, 0.3f},
+    };
 
     // Table
     mgl::Mesh* tableMesh = new mgl::Mesh();
@@ -217,8 +296,7 @@ void MyApp::initCallback(GLFWwindow* win) {
         partNode->shader = Shaders;
         partNode->submeshIndex = i;
         partNode->modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.7f, 0.0f));
-        partNode->color = glm::vec3(1.0f, 0.0f + 0.1f * i, 0.0f + 0.1f * i);
-
+        partNode->color = pickagramColors[i];
         tableNode->addChild(partNode);
         pieceNodes.push_back(partNode);
     }
