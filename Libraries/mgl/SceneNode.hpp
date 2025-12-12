@@ -31,6 +31,7 @@ public:
         children.push_back(child);
     }
 
+    //antes de desenhar, enviamos os dados ao shader
     void draw(const glm::mat4& parentMatrix) {
         glm::mat4 globalMatrix = parentMatrix * modelMatrix;
 

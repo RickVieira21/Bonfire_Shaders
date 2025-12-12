@@ -54,14 +54,14 @@ bool leftPressed = false;
 ///////////////////////////////////////////////////////////////////////// MESHES
 
 void MyApp::createMeshes() {
-  std::string mesh_dir = "assets/models/";
-  std::string mesh_file = "coiledsword.obj";
-  std::string mesh_fullname = mesh_dir + mesh_file;
+    Mesh = new mgl::Mesh();
+    Mesh->joinIdenticalVertices();
+    Mesh->create("assets/models/coiledsword.obj");
 
-  Mesh = new mgl::Mesh();
-  Mesh->joinIdenticalVertices();
-  Mesh->create(mesh_fullname);
+    if (!Mesh->hasNormals())
+        Mesh->generateNormals();
 }
+
 
 ///////////////////////////////////////////////////////////////////////// SHADER
 
@@ -144,6 +144,7 @@ void MyApp::createCamera() {
 
 glm::mat4 ModelMatrix(1.0f);
 
+//enviamos dados globais para o shader (luz e câmara)
 void MyApp::drawScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -187,13 +188,12 @@ void MyApp::initCallback(GLFWwindow* win) {
     createCamera();
 
     glm::vec3 bladeColor = glm::vec3(0.4f, 0.1f, 0.1f); 
-    glm::vec3 handleColor = glm::vec3(0.1f, 0.1f, 0.1f);  
+    glm::vec3 handleColor = glm::vec3(0.6f, 0.1f, 0.2f);  
 
     rootNode = new SceneNode();
     
     // sword
-    mgl::Mesh* swordMesh = new mgl::Mesh();
-    swordMesh->create("assets/models/coiledsword.obj");
+    mgl::Mesh* swordMesh = Mesh;
     if (!swordMesh->hasNormals()) swordMesh->generateNormals();
 
     // Create one SceneNode per submesh
@@ -214,7 +214,7 @@ void MyApp::initCallback(GLFWwindow* win) {
             partNode->color = bladeColor;
             partNode->ambientStrength = 0.08f;
             partNode->specularStrength = 0.8f;
-            partNode->shininess = 64.0f;
+            partNode->shininess = 4.0f;
         }
         else { // handle
             partNode->color = handleColor;
