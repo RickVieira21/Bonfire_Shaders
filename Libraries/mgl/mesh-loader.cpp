@@ -66,28 +66,46 @@ void MyApp::createMeshes() {
 ///////////////////////////////////////////////////////////////////////// SHADER
 
 void MyApp::createShaderPrograms() {
-  Shaders = new mgl::ShaderProgram();
-  Shaders->addShader(GL_VERTEX_SHADER, "cube-vs.glsl");
-  Shaders->addShader(GL_FRAGMENT_SHADER, "cube-fs.glsl");
+    Shaders = new mgl::ShaderProgram();
 
-  Shaders->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
-  if (Mesh->hasNormals()) {
-    Shaders->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
-  }
-  if (Mesh->hasTexcoords()) {
-    Shaders->addAttribute(mgl::TEXCOORD_ATTRIBUTE, mgl::Mesh::TEXCOORD);
-  }
-  if (Mesh->hasTangentsAndBitangents()) {
-    Shaders->addAttribute(mgl::TANGENT_ATTRIBUTE, mgl::Mesh::TANGENT);
-  }
+    Shaders->addShader(GL_VERTEX_SHADER, "blinnPhong-vs.glsl");
+    Shaders->addShader(GL_FRAGMENT_SHADER, "blinnPhong-fs.glsl");
 
-  Shaders->addUniform(mgl::MODEL_MATRIX);
-  Shaders->addUniform("baseColor");               // per-node base color used by fragment shader
-  Shaders->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
-  Shaders->create();
+    // Vertex attributes
+    Shaders->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
 
-  ModelMatrixId = Shaders->Uniforms[mgl::MODEL_MATRIX].index;
+    if (Mesh->hasNormals()) {
+        Shaders->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+    }
+
+    if (Mesh->hasTexcoords()) {
+        Shaders->addAttribute(mgl::TEXCOORD_ATTRIBUTE, mgl::Mesh::TEXCOORD);
+    }
+
+    if (Mesh->hasTangentsAndBitangents()) {
+        Shaders->addAttribute(mgl::TANGENT_ATTRIBUTE, mgl::Mesh::TANGENT);
+    }
+
+    // Uniforms
+    Shaders->addUniform(mgl::MODEL_MATRIX);
+    Shaders->addUniform("baseColor");
+
+    // Lighting uniforms
+    Shaders->addUniform("lightPos");
+    Shaders->addUniform("lightColor");
+    Shaders->addUniform("viewPos");
+
+    // Material uniforms
+    Shaders->addUniform("ambientStrength");
+    Shaders->addUniform("specularStrength");
+    Shaders->addUniform("shininess");
+
+    // Camera UBO
+    Shaders->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+    Shaders->create();
+    ModelMatrixId = Shaders->Uniforms[mgl::MODEL_MATRIX].index;
 }
+
 
 ///////////////////////////////////////////////////////////////////////// CAMERA
 
@@ -127,12 +145,37 @@ void MyApp::createCamera() {
 glm::mat4 ModelMatrix(1.0f);
 
 void MyApp::drawScene() {
-  //Shaders->bind();
-  //glUniformMatrix4fv(ModelMatrixId, 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-  //Mesh->draw();
-  //Shaders->unbind();
-  rootNode->draw(glm::mat4(1.0f));
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    Shaders->bind();
+
+    //  Luz da fogueira (posição no mundo)
+    glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, 0.0f);
+    glUniform3fv(
+        Shaders->Uniforms["lightPos"].index,
+        1, glm::value_ptr(lightPos)
+    );
+
+    //  Cor da luz (fogo)
+    glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
+    glUniform3fv(
+        Shaders->Uniforms["lightColor"].index,
+        1, glm::value_ptr(lightColor)
+    );
+
+    //  Posição da câmara
+    glm::vec3 camPos = activeCam->getPosition();
+    glUniform3fv(
+        Shaders->Uniforms["viewPos"].index,
+        1, glm::value_ptr(camPos)
+    );
+
+    Shaders->unbind();
+
+    // Desenhar scenegraph
+    rootNode->draw(glm::mat4(1.0f));
 }
+
 
 
 
@@ -143,26 +186,8 @@ void MyApp::initCallback(GLFWwindow* win) {
     createShaderPrograms();
     createCamera();
 
-    /*std::vector<glm::vec3> swordColors = {
-    //Small Triangle 1
-    {0.0f, 0.502f, 1.0f},
-    //Large Triangle 1
-    {0.3f, 0.4f, 1.0f},
-    //Parallelogram
-    {1.0f, 0.5f, 0.0f},
-    //Small Triangle 2
-    {1.0f, 0.0f, 0.0f},
-    //Medium Triangle
-    {0.35f, 0.0f, 0.5f},
-    //Square
-    {0.1f, 0.8f, 0.2f},
-    //Large Triangle 2
-    {0.7f, 0.0f, 0.3f},
-    };*/
-
-    glm::vec3 bladeColor = glm::vec3(0.2f, 0.1f, 0.1f); 
+    glm::vec3 bladeColor = glm::vec3(0.4f, 0.1f, 0.1f); 
     glm::vec3 handleColor = glm::vec3(0.1f, 0.1f, 0.1f);  
-
 
     rootNode = new SceneNode();
     
@@ -179,20 +204,25 @@ void MyApp::initCallback(GLFWwindow* win) {
         partNode->submeshIndex = i;
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.05f)); // 10% do tamanho original
-        model = glm::translate(model, glm::vec3(0.0f, 0.7f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.05f)); // 5% do original
+        //model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         partNode->modelMatrix = model;
 
 
         // MATERIAIS DIFERENTES AQUI
-        if (i == 0) {               // blade
+        if (i == 0) { // blade
             partNode->color = bladeColor;
+            partNode->ambientStrength = 0.08f;
+            partNode->specularStrength = 0.8f;
+            partNode->shininess = 64.0f;
         }
-        else {                    // handle
+        else { // handle
             partNode->color = handleColor;
+            partNode->ambientStrength = 0.15f;
+            partNode->specularStrength = 0.1f;
+            partNode->shininess = 8.0f;
         }
 
-//      partNode->color = swordColors[i];
         rootNode->addChild(partNode);
     }
 }

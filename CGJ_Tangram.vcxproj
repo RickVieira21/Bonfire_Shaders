@@ -34,8 +34,8 @@
     <ClInclude Include="Libraries\mgl\SceneNode.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="cube-fs.glsl" />
-    <None Include="cube-vs.glsl" />
+    <None Include="blinnPhong-fs.glsl" />
+    <None Include="blinnPhong-vs.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

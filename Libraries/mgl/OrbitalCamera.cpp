@@ -26,6 +26,13 @@ glm::mat4 OrbitalCamera::getProjectionMatrix(float aspect) const {
     }
 }
 
+
+glm::vec3 OrbitalCamera::getPosition() const {
+    glm::vec3 offset = rotation * glm::vec3(0.0f, 0.0f, distance);
+    return center + offset;
+}
+
+
 void OrbitalCamera::rotate(float yawDeg, float pitchDeg) {
     glm::quat yaw = glm::angleAxis(glm::radians(yawDeg), glm::vec3(0, 1, 0));
     glm::quat pitch = glm::angleAxis(glm::radians(pitchDeg), glm::vec3(1, 0, 0));

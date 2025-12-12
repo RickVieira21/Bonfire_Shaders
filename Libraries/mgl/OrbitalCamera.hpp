@@ -19,6 +19,8 @@ public:
 
     glm::mat4 getViewMatrix() const;
     glm::mat4 getProjectionMatrix(float aspect) const;
+    glm::vec3 getPosition() const;
+
     void rotate(float yawDeg, float pitchDeg);
     void zoom(float delta);
     void toggleProjection();
