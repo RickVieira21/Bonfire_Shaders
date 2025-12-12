@@ -137,116 +137,6 @@ void MyApp::drawScene() {
 }
 
 
-void createConfigurations() {
-    std::vector<glm::mat4> pickagramMatrices;
-    for (auto p : pieceNodes) {
-        pickagramMatrices.push_back(p->modelMatrix); 
-    }
-
-    struct RotationInstruction {
-        glm::vec3 axis;
-        float degrees;
-        int repeatCount;
-    };
-
-    // box configuration: example layout on XZ plane (positions are local to table)
-    std::vector<glm::mat4> boxMatrices;
-    // Final positions of all pickagram shapes
-    std::vector<glm::vec3> boxPositions = {
-        //Small Triangle 1
-        {-0.7f, 1.2f, 0.06f},
-        //Large Triangle 1
-        {0.78f, 0.6f, 0.0f}, 
-        //Parallelogram
-        {-0.5f, 0.6f, -0.6f},
-        //Small Triangle 2
-        {1.1f, 0.9f, 0.0f},
-        //Medium Triangle
-        {0.38f, 1.03f, 0.0f}, 
-        //Square
-        {-0.5f, 1.0f, 0.0f},
-        //Large Triangle 2
-        {-0.1f, 1.45f, -0.69f}
-    };
-    std::vector<std::vector<RotationInstruction>> pieceRotationSequences = {
-
-        //Small Triangle 1
-        {
-            { {1,0,0}, 90.0f, 1 }
-        },
-        //Large Triangle 1
-        {
-            { {1,0,0}, 90.0f, 1 },
-            { {0,0,1}, 45.0f, 1 },
-        },
-        //Parallelogram
-        {
-            { {1,0,0}, 90.0f, 1 },
-            { {0,1,0}, 90.0f, 2 },
-            { {0,0,1}, 45.0f, 1 },
-        },
-        //Small Triangle 2
-        {
-            { {0,0,1}, 90.0f, 1 },
-            { {0,1,0}, 90.0f, 1 }
-        },
-        //Medium Triangle
-        {
-            { {0,1,0}, 135.0f, 1 },
-            { {1,0,0}, 90.0f, 1 },
-        },
-        //Square
-        {
-            { {0,1,0}, -135.0f, 1 },
-            { {1,0,0}, -90.0f, 1 },
-            { {0,1,0}, 180.0f, 1 },
-            { {1,0,0}, 180.0f, 1 },
-            { {0,1,0}, 180.0f, 1 },
-        },
-        //Large Triangle 2
-        {
-            { {1,0,0}, 90.0f, 1 },
-            { {0,0,1}, -45.0f, 1 },
-            { {0,1,0}, 180.0f, 1 },
-            { {0,0,1}, 90.0f, 1 },
-        }
-    };
-
-
-
-    for (size_t i = 0; i < pieceNodes.size(); ++i) {
-        glm::vec3 pos = boxPositions[i % boxPositions.size()];
-        glm::mat4 M = glm::translate(glm::mat4(1.0f), pos);
-        glm::mat4 R = glm::mat4(1.0f);
-        //
-        // Get this piece’s rotation steps
-        const auto& steps = pieceRotationSequences[i];
-
-        // Apply all steps in order
-        for (const RotationInstruction& step : steps) {
-            glm::vec3 axis = glm::normalize(step.axis);
-
-            for (int k = 0; k < step.repeatCount; ++k) {
-                R = glm::rotate(glm::mat4(1.0f), glm::radians(step.degrees), axis) * R;
-            }
-        }
-        //glm::mat4 R = glm::rotate(glm::mat4(1.0f), glm::radians(boxRadiansRotations[i]), boxAxisRotations[i]);
-        glm::mat4 finalM = M * R;
-        boxMatrices.push_back(finalM);
-    }
-
-    // Assign animation start/target for each piece:
-    for (size_t i = 0; i < pieceNodes.size(); ++i) {
-        SceneNode* node = pieceNodes[i];
-        glm::mat4 pickM = pickagramMatrices[i];
-        glm::mat4 boxM = boxMatrices[i];
-
-        node->setAnimationTargets(pickM, boxM, /*startProgress=*/1.0f, /*speed=*/0.8f);
-        //startProgress = 1 means currently at pickagram config.
-    }
-}
-
-
 
 ////////////////////////////////////////////////////////////////////// CALLBACKS
 
@@ -273,6 +163,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     };
 
     // Table
+
     mgl::Mesh* tableMesh = new mgl::Mesh();
     tableMesh->create("assets/models/tabletop.obj");
 
@@ -300,8 +191,6 @@ void MyApp::initCallback(GLFWwindow* win) {
         tableNode->addChild(partNode);
         pieceNodes.push_back(partNode);
     }
-
-    createConfigurations();
 }
 
 
@@ -312,7 +201,6 @@ void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
 }
 
 void MyApp::displayCallback(GLFWwindow *win, double elapsed) { 
-    rootNode->updateAnimation((float)elapsed);
     drawScene(); 
 }
 
@@ -388,24 +276,6 @@ void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int 
         activeCam->toggleProjection();
         Camera->setProjectionMatrix(activeCam->getProjectionMatrix((float)width / height));
     }
-
-    // left arrow: animate toward box (progress -> 0), right arrow: animate toward pickagram (progress -> 1)
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_LEFT) {
-            std::cout << "[LOG] LEFT key pressed -> animating toward box\n";
-            for (auto n : pieceNodes) n->commandAnimation(-1);
-        }
-        if (key == GLFW_KEY_RIGHT) {
-            std::cout << "[LOG] RIGHT key pressed -> animating toward pickagram\n";
-            for (auto n : pieceNodes) n->commandAnimation(+1);
-        }
-    }
-    else if (action == GLFW_RELEASE) {
-        if (key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) {
-            std::cout << "[LOG] Key released -> stopping animation\n";
-            for (auto n : pieceNodes) n->commandAnimation(0);
-        }
-    }
 }
 
 
@@ -415,7 +285,7 @@ int main(int argc, char *argv[]) {
   mgl::Engine &engine = mgl::Engine::getInstance();
   engine.setApp(new MyApp());
   engine.setOpenGL(4, 6);
-  engine.setWindow(800, 600, "3D Pickagram - Group 5", 0, 1);
+  engine.setWindow(800, 600, "CGJ Final Project - Ricardo Vieira", 0, 1);
   engine.init();
   engine.run();
   exit(EXIT_SUCCESS);
