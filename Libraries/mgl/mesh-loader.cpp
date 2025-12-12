@@ -50,6 +50,10 @@ double lastX, lastY;
 bool rightPressed = false;
 bool leftPressed = false;
 
+//Variaveis luz
+glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
+
 
 ///////////////////////////////////////////////////////////////////////// MESHES
 
@@ -144,21 +148,19 @@ void MyApp::createCamera() {
 
 glm::mat4 ModelMatrix(1.0f);
 
-//enviamos dados globais para o shader (luz e câmara)
+//enviar dados globais para o shader (luz e câmara)
 void MyApp::drawScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Shaders->bind();
 
     //  Luz da fogueira (posição no mundo)
-    glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, 0.0f);
     glUniform3fv(
         Shaders->Uniforms["lightPos"].index,
         1, glm::value_ptr(lightPos)
     );
 
     //  Cor da luz (fogo)
-    glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
     glUniform3fv(
         Shaders->Uniforms["lightColor"].index,
         1, glm::value_ptr(lightColor)
@@ -172,8 +174,6 @@ void MyApp::drawScene() {
     );
 
     Shaders->unbind();
-
-    // Desenhar scenegraph
     rootNode->draw(glm::mat4(1.0f));
 }
 
@@ -225,6 +225,37 @@ void MyApp::initCallback(GLFWwindow* win) {
 
         rootNode->addChild(partNode);
     }
+
+
+    // ==================== DEBUG LIGHT OBJECT ====================
+
+    // Criar nó da luz
+    SceneNode* lightNode = new SceneNode();
+
+    // Criar mesh simples (esfera ou cubo)
+    mgl::Mesh* lightMesh = new mgl::Mesh();
+    lightMesh->create("assets/models/cube-v.obj");
+    if (!lightMesh->hasNormals())
+        lightMesh->generateNormals();
+
+    lightNode->mesh = lightMesh;
+    lightNode->shader = Shaders;
+
+    // Transformação: posição + escala pequena
+    glm::mat4 lightModel = glm::mat4(1.0f);
+    lightModel = glm::translate(lightModel, lightPos);
+    lightModel = glm::scale(lightModel, glm::vec3(0.05f));
+    lightNode->modelMatrix = lightModel;
+
+    // Material “emissivo” (não depende da luz)
+    lightNode->color = glm::vec3(1.0f, 1.0f, 1.0f);
+    lightNode->ambientStrength = 1.0f;
+    lightNode->specularStrength = 0.0f;
+    lightNode->shininess = 1.0f;
+
+    // Adicionar à cena
+    rootNode->addChild(lightNode);
+
 }
 
 
