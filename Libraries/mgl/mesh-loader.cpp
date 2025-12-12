@@ -34,7 +34,6 @@ private:
   GLint ModelMatrixId;
   mgl::Mesh *Mesh = nullptr;
   SceneNode* rootNode = nullptr;
-  SceneNode* tableNode = nullptr;
 
   void createMeshes();
   void createShaderPrograms();
@@ -50,14 +49,13 @@ OrbitalCamera* activeCam;
 double lastX, lastY;
 bool rightPressed = false;
 bool leftPressed = false;
-std::vector<SceneNode*> pieceNodes; // filled on initCallback
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
 
 void MyApp::createMeshes() {
   std::string mesh_dir = "assets/models/";
-  std::string mesh_file = "Pickagram_Group05.obj";
+  std::string mesh_file = "coiledsword.obj";
   std::string mesh_fullname = mesh_dir + mesh_file;
 
   Mesh = new mgl::Mesh();
@@ -145,7 +143,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     createShaderPrograms();
     createCamera();
 
-    std::vector<glm::vec3> pickagramColors = {
+    /*std::vector<glm::vec3> swordColors = {
     //Small Triangle 1
     {0.0f, 0.502f, 1.0f},
     //Large Triangle 1
@@ -160,36 +158,42 @@ void MyApp::initCallback(GLFWwindow* win) {
     {0.1f, 0.8f, 0.2f},
     //Large Triangle 2
     {0.7f, 0.0f, 0.3f},
-    };
+    };*/
 
-    // Table
+    glm::vec3 bladeColor = glm::vec3(0.2f, 0.1f, 0.1f); 
+    glm::vec3 handleColor = glm::vec3(0.1f, 0.1f, 0.1f);  
 
-    mgl::Mesh* tableMesh = new mgl::Mesh();
-    tableMesh->create("assets/models/tabletop.obj");
-
-    tableNode = new SceneNode();
-    tableNode->mesh = tableMesh;
-    tableNode->shader = Shaders;
-    tableNode->color = glm::vec3(0.6f);
 
     rootNode = new SceneNode();
-    rootNode->addChild(tableNode);
-
-    // Pickagram
-    mgl::Mesh* pickagramMesh = new mgl::Mesh();
-    pickagramMesh->create("assets/models/Pickagram_Group05.obj");
-    if (!pickagramMesh->hasNormals()) pickagramMesh->generateNormals();
+    
+    // sword
+    mgl::Mesh* swordMesh = new mgl::Mesh();
+    swordMesh->create("assets/models/coiledsword.obj");
+    if (!swordMesh->hasNormals()) swordMesh->generateNormals();
 
     // Create one SceneNode per submesh
-    for (size_t i = 0; i < pickagramMesh->getMeshCount(); i++) {
+    for (size_t i = 0; i < swordMesh->getMeshCount(); i++) {
         SceneNode* partNode = new SceneNode();
-        partNode->mesh = pickagramMesh;
+        partNode->mesh = swordMesh;
         partNode->shader = Shaders;
         partNode->submeshIndex = i;
-        partNode->modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.7f, 0.0f));
-        partNode->color = pickagramColors[i];
-        tableNode->addChild(partNode);
-        pieceNodes.push_back(partNode);
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.05f)); // 10% do tamanho original
+        model = glm::translate(model, glm::vec3(0.0f, 0.7f, 0.0f));
+        partNode->modelMatrix = model;
+
+
+        // MATERIAIS DIFERENTES AQUI
+        if (i == 0) {               // blade
+            partNode->color = bladeColor;
+        }
+        else {                    // handle
+            partNode->color = handleColor;
+        }
+
+//      partNode->color = swordColors[i];
+        rootNode->addChild(partNode);
     }
 }
 
@@ -234,18 +238,6 @@ void MyApp::cursorCallback(GLFWwindow* win, double xpos, double ypos) {
     if (rightPressed) {
         activeCam->rotate(-dx * 0.5f, -dy * 0.5f);
         Camera->setViewMatrix(activeCam->getViewMatrix());
-    }
-
-    if (leftPressed && tableNode) {
-        // Camera axes (use the active camera view matrix)
-        glm::vec3 right = glm::normalize(glm::vec3(activeCam->getViewMatrix()[0]));
-        glm::vec3 forward = -glm::normalize(glm::vec3(activeCam->getViewMatrix()[2]));
-
-        const float scale = 0.01f;
-        tableNode->modelMatrix = glm::translate(
-            tableNode->modelMatrix,
-            right * dx * scale + forward * (-dy) * scale
-        );
     }
 
     lastX = xpos;

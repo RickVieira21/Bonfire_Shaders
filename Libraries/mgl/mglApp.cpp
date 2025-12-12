@@ -138,7 +138,7 @@ void Engine::setupGLEW() {
 }
 
 void Engine::setupOpenGL() {
-  glClearColor(0.1f, 0.1f, 0.3f, 1.0f);
+  glClearColor(0.02f, 0.02f, 0.03f, 1.0f); // background color
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glDepthMask(GL_TRUE);
