@@ -36,6 +36,8 @@
   <ItemGroup>
     <None Include="blinnPhong-fs.glsl" />
     <None Include="blinnPhong-vs.glsl" />
+    <None Include="skybox-fs.glsl" />
+    <None Include="skybox-vs.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

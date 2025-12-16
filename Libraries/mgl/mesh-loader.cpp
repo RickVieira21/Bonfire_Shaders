@@ -9,6 +9,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #define GLM_ENABLE_EXPERIMENTAL
+#define STB_IMAGE_IMPLEMENTATION
+#include "../stb/stb_image.h"
+
 #include "../mgl/mgl.hpp"
 #include "OrbitalCamera.hpp"
 #include "SceneNode.hpp"
@@ -51,8 +54,14 @@ bool rightPressed = false;
 bool leftPressed = false;
 
 //Variaveis luz
-glm::vec3 lightPos = glm::vec3(0.0f, 1.0f, 0.0f);
+glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f);
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
+
+//Skybox
+// Skybox
+mgl::Mesh* skyboxMesh = nullptr;
+mgl::ShaderProgram* skyboxShader = nullptr;
+GLuint skyboxCubemap = 0;
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -64,6 +73,11 @@ void MyApp::createMeshes() {
 
     if (!Mesh->hasNormals())
         Mesh->generateNormals();
+
+
+    // Mesh da skybox (cubo)
+    skyboxMesh = new mgl::Mesh();
+    skyboxMesh->create("assets/models/cube-v.obj");
 }
 
 
@@ -108,6 +122,21 @@ void MyApp::createShaderPrograms() {
     Shaders->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
     Shaders->create();
     ModelMatrixId = Shaders->Uniforms[mgl::MODEL_MATRIX].index;
+
+
+
+    // ==================== SKYBOX SHADER ====================
+    skyboxShader = new mgl::ShaderProgram();
+    skyboxShader->addShader(GL_VERTEX_SHADER, "skybox-vs.glsl");
+    skyboxShader->addShader(GL_FRAGMENT_SHADER, "skybox-fs.glsl");
+
+    skyboxShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+
+    skyboxShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+    skyboxShader->addUniform("skybox");
+
+    skyboxShader->create();
+
 }
 
 
@@ -172,10 +201,99 @@ void MyApp::drawScene() {
         Shaders->Uniforms["viewPos"].index,
         1, glm::value_ptr(camPos)
     );
+    
+    
+    // ==================== SKYBOX ====================
+    glDepthFunc(GL_LEQUAL);
+    glDisable(GL_CULL_FACE);
 
+    skyboxShader->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxCubemap);
+    glUniform1i(skyboxShader->Uniforms["skybox"].index, 0);
+
+    skyboxMesh->draw();
+
+    skyboxShader->unbind();
+
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+
+
+  
     Shaders->unbind();
     rootNode->draw(glm::mat4(1.0f));
 }
+
+
+
+////////////////////////////////////////////////////////////////////// SKYBOX METHODS
+
+GLuint loadCubemapFromCross(const std::string& filename) {
+    int width, height, channels;
+    unsigned char* data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+
+    if (!data) {
+        std::cout << "Failed to load skybox cross image\n";
+        return 0;
+    }
+
+    int faceSize = width / 4;
+    GLenum format = (channels == 4) ? GL_RGBA : GL_RGB;
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
+
+    // offsets (x, y) das faces na imagem
+    struct Face { int x, y; };
+    Face faces[6] = {
+        {2, 1}, // +X (right)
+        {0, 1}, // -X (left)
+        {1, 0}, // +Y (top)
+        {1, 2}, // -Y (bottom)
+        {1, 1}, // +Z (front)
+        {3, 1}  // -Z (back)
+    };
+
+    for (int i = 0; i < 6; i++) {
+        unsigned char* faceData = new unsigned char[faceSize * faceSize * channels];
+
+        for (int y = 0; y < faceSize; y++) {
+            for (int x = 0; x < faceSize; x++) {
+                int srcX = faces[i].x * faceSize + x;
+                int srcY = faces[i].y * faceSize + y;
+
+                for (int c = 0; c < channels; c++) {
+                    faceData[(y * faceSize + x) * channels + c] =
+                        data[(srcY * width + srcX) * channels + c];
+                }
+            }
+        }
+
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+            0, format,
+            faceSize, faceSize,
+            0, format, GL_UNSIGNED_BYTE,
+            faceData
+        );
+
+        delete[] faceData;
+    }
+
+    stbi_image_free(data);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return texID;
+}
+
+
 
 
 
@@ -255,6 +373,14 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     // Adicionar à cena
     rootNode->addChild(lightNode);
+
+
+
+    // ==================== SKYBOX ====================
+    skyboxCubemap = loadCubemapFromCross(
+        "assets/skybox/Skybox_cross.png"
+    );
+
 
 }
 
