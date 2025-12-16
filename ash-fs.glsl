@@ -45,16 +45,38 @@ float noise(vec3 p) {
 
 // ----------------- Material -----------------
 
-vec3 proceduralStone(vec3 pos) {
-    float n1 = noise(pos * 2.0);
-    float n2 = noise(pos * 6.0);
-    float n = 0.6 * n1 + 0.4 * n2;
+vec3 proceduralAsh(vec3 pos) {
 
-    vec3 dark = vec3(0.08, 0.08, 0.08);
-    vec3 light = vec3(0.4, 0.4, 0.4);
+    // Escala base 
+    vec3 p = pos * 2.5;
 
-    return mix(dark, light, n);
+    // Formas grandes (acumulação de ash)
+    float base = noise(p * 0.6);
+
+    // Grão fino (areia / pó)
+    float grain = noise(p * 30.0);
+
+    // Aumentar contraste
+    base = pow(base, 1.4);
+    grain = pow(grain, 2.5);
+
+    // Mistura: mais peso no grão
+    float ash = mix(base, grain, 0.65);
+
+    // Aumentar zonas escuras
+    ash = ash * 0.85;
+
+    // Paleta ash
+    vec3 darkAsh  = vec3(0.05, 0.05, 0.06);
+    vec3 midAsh   = vec3(0.65, 0.65, 0.67);
+    vec3 lightAsh = vec3(0.92, 0.92, 0.92);
+
+    vec3 color = mix(darkAsh, midAsh, ash);
+    color = mix(color, lightAsh, smoothstep(0.65, 1.0, ash));
+
+    return color;
 }
+
 
 // ----------------- Main -----------------
 
@@ -73,7 +95,7 @@ void main()
     float spec = pow(max(dot(N, H), 0.0), shininess);
     vec3 specular = specularStrength * spec * lightColor;
 
-    vec3 baseColor = proceduralStone(exPosition);
+    vec3 baseColor = proceduralAsh(exPosition);
     vec3 result = (ambient + diffuse + specular) * baseColor;
 
     FragColor = vec4(result, 1.0);

@@ -55,7 +55,7 @@ bool leftPressed = false;
 
 //Variaveis luz
 glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f);
-glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
+glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 
 //Skybox
 mgl::Mesh* skyboxMesh = nullptr;
@@ -63,7 +63,7 @@ mgl::ShaderProgram* skyboxShader = nullptr;
 GLuint skyboxCubemap = 0;
 
 //Procedural
-mgl::ShaderProgram* proceduralShader = nullptr;
+mgl::ShaderProgram* ashShader = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -141,32 +141,27 @@ void MyApp::createShaderPrograms() {
     skyboxShader->create();
 
 
-    // ==================== PROCEDURAL SHADER ====================
+    // ==================== ASH PROCEDURAL SHADER ====================
 
-    proceduralShader = new mgl::ShaderProgram();
+    ashShader = new mgl::ShaderProgram();
+    ashShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
+    ashShader->addShader(GL_FRAGMENT_SHADER, "ash-fs.glsl");
 
-    proceduralShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
-    proceduralShader->addShader(GL_FRAGMENT_SHADER, "procedural-fs.glsl");
+    ashShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+    ashShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
 
-    proceduralShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
-    proceduralShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+    ashShader->addUniform(mgl::MODEL_MATRIX);
+    ashShader->addUniform("lightPos");
+    ashShader->addUniform("lightColor");
+    ashShader->addUniform("viewPos");
 
-    proceduralShader->addUniform(mgl::MODEL_MATRIX);
+    ashShader->addUniform("ambientStrength");
+    ashShader->addUniform("specularStrength");
+    ashShader->addUniform("shininess");
 
-    // iluminação
-    proceduralShader->addUniform("lightPos");
-    proceduralShader->addUniform("lightColor");
-    proceduralShader->addUniform("viewPos");
+    ashShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+    ashShader->create();
 
-    // material
-    proceduralShader->addUniform("ambientStrength");
-    proceduralShader->addUniform("specularStrength");
-    proceduralShader->addUniform("shininess");
-
-    // câmara
-    proceduralShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
-
-    proceduralShader->create();
 
 
 }
@@ -252,15 +247,17 @@ void MyApp::drawScene() {
     glEnable(GL_CULL_FACE);
   
     Shaders->unbind();
-    rootNode->draw(glm::mat4(1.0f));
+    
 
     // ==================== PROCEDURAL ====================
 
-    proceduralShader->bind();
-    glUniform3fv(proceduralShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(proceduralShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
-    glUniform3fv(proceduralShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
-    proceduralShader->unbind();
+    ashShader->bind();
+    glUniform3fv(ashShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
+    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
+    glUniform3fv(ashShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
+    ashShader->unbind();
+
+    rootNode->draw(glm::mat4(1.0f));
 }
 
 
@@ -424,20 +421,19 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     // ==================== Procedural ====================
 
-    SceneNode* ground = new SceneNode();
-    ground->mesh = new mgl::Mesh();
-    ground->mesh->create("assets/models/tabletop.obj");
+    SceneNode* ashNode = new SceneNode();
+    ashNode->mesh = new mgl::Mesh();
+    ashNode->mesh->create("assets/models/ash.obj");
 
-    ground->shader = proceduralShader;
-
-    ground->ambientStrength = 0.2f;
-    ground->specularStrength = 0.05f;
-    ground->shininess = 4.0f;
+    ashNode->shader = ashShader;
 
     glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
-    ground->modelMatrix = model;
 
-    rootNode->addChild(ground);
+    ashNode->ambientStrength = 0.7f;
+    ashNode->specularStrength = 0.5f;
+    ashNode->shininess = 1.0f;
+
+    rootNode->addChild(ashNode);
 
 
 

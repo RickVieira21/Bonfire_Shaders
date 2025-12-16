@@ -36,7 +36,7 @@
   <ItemGroup>
     <None Include="blinnPhong-fs.glsl" />
     <None Include="blinnPhong-vs.glsl" />
-    <None Include="procedural-fs.glsl" />
+    <None Include="ash-fs.glsl" />
     <None Include="procedural-vs.glsl" />
     <None Include="skybox-fs.glsl" />
     <None Include="skybox-vs.glsl" />
