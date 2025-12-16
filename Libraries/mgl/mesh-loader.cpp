@@ -58,10 +58,12 @@ glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f);
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f);
 
 //Skybox
-// Skybox
 mgl::Mesh* skyboxMesh = nullptr;
 mgl::ShaderProgram* skyboxShader = nullptr;
 GLuint skyboxCubemap = 0;
+
+//Procedural
+mgl::ShaderProgram* proceduralShader = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -75,7 +77,7 @@ void MyApp::createMeshes() {
         Mesh->generateNormals();
 
 
-    // Mesh da skybox (cubo)
+    // Mesh da skybox 
     skyboxMesh = new mgl::Mesh();
     skyboxMesh->create("assets/models/cube-v.obj");
 }
@@ -126,6 +128,7 @@ void MyApp::createShaderPrograms() {
 
 
     // ==================== SKYBOX SHADER ====================
+
     skyboxShader = new mgl::ShaderProgram();
     skyboxShader->addShader(GL_VERTEX_SHADER, "skybox-vs.glsl");
     skyboxShader->addShader(GL_FRAGMENT_SHADER, "skybox-fs.glsl");
@@ -136,6 +139,35 @@ void MyApp::createShaderPrograms() {
     skyboxShader->addUniform("skybox");
 
     skyboxShader->create();
+
+
+    // ==================== PROCEDURAL SHADER ====================
+
+    proceduralShader = new mgl::ShaderProgram();
+
+    proceduralShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
+    proceduralShader->addShader(GL_FRAGMENT_SHADER, "procedural-fs.glsl");
+
+    proceduralShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+    proceduralShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+
+    proceduralShader->addUniform(mgl::MODEL_MATRIX);
+
+    // iluminação
+    proceduralShader->addUniform("lightPos");
+    proceduralShader->addUniform("lightColor");
+    proceduralShader->addUniform("viewPos");
+
+    // material
+    proceduralShader->addUniform("ambientStrength");
+    proceduralShader->addUniform("specularStrength");
+    proceduralShader->addUniform("shininess");
+
+    // câmara
+    proceduralShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+
+    proceduralShader->create();
+
 
 }
 
@@ -218,11 +250,17 @@ void MyApp::drawScene() {
 
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
-
-
   
     Shaders->unbind();
     rootNode->draw(glm::mat4(1.0f));
+
+    // ==================== PROCEDURAL ====================
+
+    proceduralShader->bind();
+    glUniform3fv(proceduralShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
+    glUniform3fv(proceduralShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
+    glUniform3fv(proceduralShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
+    proceduralShader->unbind();
 }
 
 
@@ -377,9 +415,30 @@ void MyApp::initCallback(GLFWwindow* win) {
 
 
     // ==================== SKYBOX ====================
+
     skyboxCubemap = loadCubemapFromCross(
-        "assets/skybox/Skybox_cross.png"
+        "assets/skybox/skybox.png"
     );
+
+
+
+    // ==================== Procedural ====================
+
+    SceneNode* ground = new SceneNode();
+    ground->mesh = new mgl::Mesh();
+    ground->mesh->create("assets/models/tabletop.obj");
+
+    ground->shader = proceduralShader;
+
+    ground->ambientStrength = 0.2f;
+    ground->specularStrength = 0.05f;
+    ground->shininess = 4.0f;
+
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
+    ground->modelMatrix = model;
+
+    rootNode->addChild(ground);
+
 
 
 }
