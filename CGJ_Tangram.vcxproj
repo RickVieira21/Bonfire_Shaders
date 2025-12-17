@@ -40,6 +40,7 @@
     <None Include="procedural-vs.glsl" />
     <None Include="skybox-fs.glsl" />
     <None Include="skybox-vs.glsl" />
+    <None Include="stones-fs.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

@@ -64,6 +64,7 @@ GLuint skyboxCubemap = 0;
 
 //Procedural
 mgl::ShaderProgram* ashShader = nullptr;
+mgl::ShaderProgram* stonesShader = nullptr;
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -163,6 +164,28 @@ void MyApp::createShaderPrograms() {
     ashShader->create();
 
 
+    // ==================== STONES PROCEDURAL SHADER ====================
+
+    stonesShader = new mgl::ShaderProgram();
+    stonesShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
+    stonesShader->addShader(GL_FRAGMENT_SHADER, "stones-fs.glsl");
+
+    stonesShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+    stonesShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+
+    stonesShader->addUniform(mgl::MODEL_MATRIX);
+    stonesShader->addUniform("lightPos");
+    stonesShader->addUniform("lightColor");
+    stonesShader->addUniform("viewPos");
+
+    stonesShader->addUniform("ambientStrength");
+    stonesShader->addUniform("specularStrength");
+    stonesShader->addUniform("shininess");
+
+    stonesShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+    stonesShader->create();
+
+
 
 }
 
@@ -249,13 +272,22 @@ void MyApp::drawScene() {
     Shaders->unbind();
     
 
-    // ==================== PROCEDURAL ====================
+    // ==================== ASH PROCEDURAL ====================
 
     ashShader->bind();
     glUniform3fv(ashShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
     glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
     glUniform3fv(ashShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     ashShader->unbind();
+
+
+    // ==================== STONES PROCEDURAL ====================
+
+    stonesShader->bind();
+    glUniform3fv(stonesShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
+    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
+    glUniform3fv(stonesShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
+    stonesShader->unbind();
 
     rootNode->draw(glm::mat4(1.0f));
 }
@@ -385,7 +417,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     // Criar nó da luz
     SceneNode* lightNode = new SceneNode();
 
-    // Criar mesh simples (esfera ou cubo)
+    // Criar cubo simples 
     mgl::Mesh* lightMesh = new mgl::Mesh();
     lightMesh->create("assets/models/cube-v.obj");
     if (!lightMesh->hasNormals())
@@ -394,7 +426,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     lightNode->mesh = lightMesh;
     lightNode->shader = Shaders;
 
-    // Transformação: posição + escala pequena
+    // Transformações...
     glm::mat4 lightModel = glm::mat4(1.0f);
     lightModel = glm::translate(lightModel, lightPos);
     lightModel = glm::scale(lightModel, glm::vec3(0.05f));
@@ -410,16 +442,13 @@ void MyApp::initCallback(GLFWwindow* win) {
     rootNode->addChild(lightNode);
 
 
-
     // ==================== SKYBOX ====================
 
     skyboxCubemap = loadCubemapFromCross(
         "assets/skybox/skybox.png"
     );
 
-
-
-    // ==================== Procedural ====================
+    // ==================== Ash Procedural ====================
 
     SceneNode* ashNode = new SceneNode();
     ashNode->mesh = new mgl::Mesh();
@@ -427,7 +456,10 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     ashNode->shader = ashShader;
 
-    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
+    //Transformações...
+    glm::mat4 ashModel = glm::mat4(1.0f);
+    ashModel = glm::scale(ashModel, glm::vec3(1.0f));
+    ashNode->modelMatrix = ashModel;
 
     ashNode->ambientStrength = 0.7f;
     ashNode->specularStrength = 0.5f;
@@ -435,6 +467,27 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     rootNode->addChild(ashNode);
 
+
+    // ==================== Stone Procedural ====================
+
+    SceneNode* stoneNode = new SceneNode();
+    stoneNode->mesh = new mgl::Mesh();
+    stoneNode->mesh->create("assets/models/stone.obj");
+
+    stoneNode->shader = stonesShader;
+
+    //Transformações...
+    glm::mat4 stoneModel = glm::mat4(1.0f);
+    glm::vec3 stonePos = glm::vec3(1.2f, -0.4f, 0.0f);
+    stoneModel = glm::translate(stoneModel, stonePos);
+    stoneModel = glm::scale(stoneModel, glm::vec3(0.2f));
+    stoneNode->modelMatrix = stoneModel;
+
+    stoneNode->ambientStrength = 0.12f;
+    stoneNode->specularStrength = 0.25f;
+    stoneNode->shininess = 16.0f;
+
+    rootNode->addChild(stoneNode);
 
 
 }
