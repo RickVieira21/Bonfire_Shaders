@@ -470,24 +470,45 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     // ==================== Stone Procedural ====================
 
-    SceneNode* stoneNode = new SceneNode();
-    stoneNode->mesh = new mgl::Mesh();
-    stoneNode->mesh->create("assets/models/stone.obj");
+    mgl::Mesh* stoneMesh = new mgl::Mesh();
+    stoneMesh->create("assets/models/stone.obj");
 
-    stoneNode->shader = stonesShader;
+    if (!stoneMesh->hasNormals())
+        stoneMesh->generateNormals();
 
-    //Transformações...
-    glm::mat4 stoneModel = glm::mat4(1.0f);
-    glm::vec3 stonePos = glm::vec3(1.2f, -0.4f, 0.0f);
-    stoneModel = glm::translate(stoneModel, stonePos);
-    stoneModel = glm::scale(stoneModel, glm::vec3(0.2f));
-    stoneNode->modelMatrix = stoneModel;
+    int stoneCount = 12;
+    float radius = 1.2f;
 
-    stoneNode->ambientStrength = 0.12f;
-    stoneNode->specularStrength = 0.25f;
-    stoneNode->shininess = 16.0f;
+    for (int i = 0; i < stoneCount; i++) {
 
-    rootNode->addChild(stoneNode);
+        SceneNode* stoneNode = new SceneNode();
+        stoneNode->mesh = stoneMesh;
+        stoneNode->shader = stonesShader;
+
+        float angle = (2.0f * 3.1415f * i) / stoneCount;
+
+        float x = cos(angle) * radius;
+        float z = sin(angle) * radius;
+
+        // Pequena variação aleatória (de scale e rotation)
+        float scale = 0.18f + 0.05f * (rand() / float(RAND_MAX));
+        float rotation = rand() / float(RAND_MAX) * 360.0f;
+
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(x, -0.4f, z));
+        model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0));
+        model = glm::scale(model, glm::vec3(scale));
+
+        stoneNode->modelMatrix = model;
+
+        // Material
+        stoneNode->ambientStrength = 0.12f;
+        stoneNode->specularStrength = 0.25f;
+        stoneNode->shininess = 16.0f;
+
+        rootNode->addChild(stoneNode);
+    }
+
 
 
 }
