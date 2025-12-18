@@ -15,6 +15,7 @@
 #include "../mgl/mgl.hpp"
 #include "OrbitalCamera.hpp"
 #include "SceneNode.hpp"
+#include "Particle.hpp"
 #include <iostream>
 
 
@@ -65,6 +66,14 @@ GLuint skyboxCubemap = 0;
 //Procedural
 mgl::ShaderProgram* ashShader = nullptr;
 mgl::ShaderProgram* stonesShader = nullptr;
+
+//Particles
+mgl::ShaderProgram* fireShader = nullptr;
+static const int MAX_PARTICLES = 500;
+
+std::vector<Particle> particles;
+GLuint particleVAO, particleVBO;
+
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES

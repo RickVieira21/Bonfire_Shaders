@@ -32,11 +32,15 @@
     <ClInclude Include="Libraries\mgl\mglApp.hpp" />
     <ClInclude Include="Libraries\mgl\OrbitalCamera.hpp" />
     <ClInclude Include="Libraries\mgl\SceneNode.hpp" />
+    <ClInclude Include="Particle.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="blinnPhong-fs.glsl" />
     <None Include="blinnPhong-vs.glsl" />
     <None Include="ash-fs.glsl" />
+    <None Include="fire-fs.glsl" />
+    <None Include="fire-gs.glsl" />
+    <None Include="fire-vs.glsl" />
     <None Include="procedural-vs.glsl" />
     <None Include="skybox-fs.glsl" />
     <None Include="skybox-vs.glsl" />
