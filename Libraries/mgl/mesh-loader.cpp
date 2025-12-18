@@ -195,6 +195,28 @@ void MyApp::createShaderPrograms() {
     stonesShader->create();
 
 
+    // ==================== FIRE PARTICLE SHADER ====================
+
+    fireShader = new mgl::ShaderProgram();
+
+    // Shaders
+    fireShader->addShader(GL_VERTEX_SHADER, "fire-vs.glsl");
+    fireShader->addShader(GL_GEOMETRY_SHADER, "fire-gs.glsl");
+    fireShader->addShader(GL_FRAGMENT_SHADER, "fire-fs.glsl");
+
+    // Attributes (particles = pontos)
+    fireShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+
+    // Uniforms
+    fireShader->addUniform("time");
+    fireShader->addUniform("fireColor");     // opcional
+    fireShader->addUniform("particleSize");  // opcional
+
+    // Camera UBO (OBRIGATÓRIO)
+    fireShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+
+    // Criar programa
+    fireShader->create();
 
 }
 
@@ -299,6 +321,29 @@ void MyApp::drawScene() {
     stonesShader->unbind();
 
     rootNode->draw(glm::mat4(1.0f));
+
+
+    // ==================== FIRE ====================
+
+    if (!particles.empty() && particleVAO != 0) {
+
+        fireShader->bind();
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        glDepthMask(GL_FALSE);
+
+        glBindVertexArray(particleVAO);
+        glDrawArrays(GL_POINTS, 0, particles.size());
+        glBindVertexArray(0);
+
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
+
+        fireShader->unbind();
+    }
+
+
 }
 
 
@@ -371,6 +416,79 @@ GLuint loadCubemapFromCross(const std::string& filename) {
 
 
 
+// ==================== FIRE METHODS ====================
+
+void initParticles() {
+
+    particles.resize(MAX_PARTICLES);
+
+    for (auto& p : particles) {
+        p.position = glm::vec3(0.0f);
+        p.velocity = glm::vec3(
+            (rand() / float(RAND_MAX) - 0.5f) * 0.3f,
+            1.0f + rand() / float(RAND_MAX),
+            (rand() / float(RAND_MAX) - 0.5f) * 0.3f
+        );
+        p.life = rand() / float(RAND_MAX);
+    }
+
+    glGenVertexArrays(1, &particleVAO);
+    glGenBuffers(1, &particleVBO);
+
+    glBindVertexArray(particleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        particles.size() * sizeof(Particle),
+        particles.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(
+        0, 3, GL_FLOAT, GL_FALSE,
+        sizeof(Particle),
+        (void*)0
+    );
+
+    // life
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(
+        1, 1, GL_FLOAT, GL_FALSE,
+        sizeof(Particle),
+        (void*)(offsetof(Particle, life))
+    );
+
+    glBindVertexArray(0);
+}
+
+
+
+void updateParticles(double elapsed) {
+
+    float dt = float(elapsed);
+
+    for (auto& p : particles) {
+        p.life += dt * 0.5f;
+
+        if (p.life > 1.0f) {
+            p.life = 0.0f;
+            p.position = glm::vec3(0.0f);
+        }
+
+        p.position += p.velocity * dt;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        0,
+        particles.size() * sizeof(Particle),
+        particles.data()
+    );
+}
 
 
 
@@ -380,6 +498,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     createMeshes();
     createShaderPrograms();
     createCamera();
+    initParticles(); // função que cria VAO/VBO
 
     glm::vec3 bladeColor = glm::vec3(0.4f, 0.1f, 0.1f); 
     glm::vec3 handleColor = glm::vec3(0.6f, 0.1f, 0.2f);  
@@ -518,9 +637,8 @@ void MyApp::initCallback(GLFWwindow* win) {
         rootNode->addChild(stoneNode);
     }
 
-
-
 }
+
 
 
 void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
@@ -530,6 +648,7 @@ void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
 }
 
 void MyApp::displayCallback(GLFWwindow *win, double elapsed) { 
+    updateParticles(elapsed); //Atualização por frame
     drawScene(); 
 }
 
