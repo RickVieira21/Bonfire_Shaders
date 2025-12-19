@@ -69,7 +69,7 @@ mgl::ShaderProgram* stonesShader = nullptr;
 
 //Particles
 mgl::ShaderProgram* fireShader = nullptr;
-static const int MAX_PARTICLES = 1000;
+static const int MAX_PARTICLES = 5000;
 float fireRadius = 0.5f;
 glm::vec3 fireCenter = glm::vec3(0.0f, -0.3f, 0.0f);
 
@@ -210,7 +210,7 @@ void MyApp::createShaderPrograms() {
     fireShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
 
     // Uniforms
-    //fireShader->addUniform("time");
+    fireShader->addUniform("time");
     //fireShader->addUniform("fireColor");     
     //fireShader->addUniform("particleSize");  
 
@@ -327,9 +327,13 @@ void MyApp::drawScene() {
 
     // ==================== FIRE ====================
 
+
     if (!particles.empty() && particleVAO != 0) {
 
+        float time = (float)glfwGetTime();
+
         fireShader->bind();
+        glUniform1f(fireShader->Uniforms["time"].index, time);;
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -673,6 +677,7 @@ void MyApp::windowSizeCallback(GLFWwindow *win, int winx, int winy) {
 }
 
 void MyApp::displayCallback(GLFWwindow *win, double elapsed) { 
+    //std::cout << elapsed;
     updateParticles(elapsed); //Atualização por frame
     drawScene(); 
 }
