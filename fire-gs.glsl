@@ -15,7 +15,7 @@ layout(std140) uniform Camera {
 void main() {
     vec3 pos = gl_in[0].gl_Position.xyz;
 
-    float size = mix(0.2, 0.05, vLife[0]);
+    float size = mix(0.08, 0.01, vLife[0]); //PARTICLE SIZE
 
     vec3 right = vec3(ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]) * size;
     vec3 up    = vec3(ViewMatrix[0][1], ViewMatrix[1][1], ViewMatrix[2][1]) * size;

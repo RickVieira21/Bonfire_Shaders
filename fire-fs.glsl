@@ -10,8 +10,8 @@ void main() {
     float alpha = 1.0 - gLife;
 
     vec3 fireColor = mix(
-        vec3(1.0, 0.3, 0.0),
-        vec3(1.0, 1.0, 0.6),
+        vec3(1.0, 0.1, 0.0),
+        vec3(1.0, 0.9, 0.5),
         gLife
     );
 

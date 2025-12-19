@@ -69,7 +69,9 @@ mgl::ShaderProgram* stonesShader = nullptr;
 
 //Particles
 mgl::ShaderProgram* fireShader = nullptr;
-static const int MAX_PARTICLES = 500;
+static const int MAX_PARTICLES = 1000;
+float fireRadius = 0.5f;
+glm::vec3 fireCenter = glm::vec3(0.0f, -0.3f, 0.0f);
 
 std::vector<Particle> particles;
 GLuint particleVAO, particleVBO;
@@ -208,9 +210,9 @@ void MyApp::createShaderPrograms() {
     fireShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
 
     // Uniforms
-    fireShader->addUniform("time");
-    fireShader->addUniform("fireColor");     // opcional
-    fireShader->addUniform("particleSize");  // opcional
+    //fireShader->addUniform("time");
+    //fireShader->addUniform("fireColor");     
+    //fireShader->addUniform("particleSize");  
 
     // Camera UBO (OBRIGATÓRIO)
     fireShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
@@ -416,14 +418,37 @@ GLuint loadCubemapFromCross(const std::string& filename) {
 
 
 
-// ==================== FIRE METHODS ====================
+// ========================================  FIRE METHODS 
+
+
+glm::vec3 randomInCircle(float radius) {
+    float angle = glm::linearRand(0.0f, glm::two_pi<float>());
+    float r = sqrt(glm::linearRand(0.0f, 1.0f)) * radius;
+
+    return glm::vec3(
+        cos(angle) * r,
+        0.0f,
+        sin(angle) * r
+    );
+}
+
 
 void initParticles() {
 
     particles.resize(MAX_PARTICLES);
 
     for (auto& p : particles) {
-        p.position = glm::vec3(0.0f);
+
+        //p.position = glm::vec3(30.0f);      
+
+        p.position = fireCenter + randomInCircle(fireRadius);
+        p.velocity = glm::vec3(
+            glm::linearRand(-0.1f, 0.1f),
+            glm::linearRand(1.5f, 2.5f),
+            glm::linearRand(-0.1f, 0.1f)
+        );
+
+
         p.velocity = glm::vec3(
             (rand() / float(RAND_MAX) - 0.5f) * 0.3f,
             1.0f + rand() / float(RAND_MAX),
@@ -471,11 +496,11 @@ void updateParticles(double elapsed) {
     float dt = float(elapsed);
 
     for (auto& p : particles) {
-        p.life += dt * 0.5f;
+        p.life += dt * 0.7f; //life/altura
 
         if (p.life > 1.0f) {
             p.life = 0.0f;
-            p.position = glm::vec3(0.0f);
+            p.position = fireCenter + randomInCircle(fireRadius); // glm::vec3(0.0f);
         }
 
         p.position += p.velocity * dt;
