@@ -25,14 +25,15 @@ void main() {
     float rnd = hash(float(gl_PrimitiveID) * 13.37);
 
     float heightFactor = clamp(vLife[0], 0.0, 1.0);
-    float flickerStrength = heightFactor * 0.25;
+    float flickerStrength = heightFactor * 0.06;
 
     float swayX = sin(t + rnd * 6.2831) * flickerStrength;
     float swayZ = cos(t * 0.7 + rnd * 6.2831) * flickerStrength;
 
-    vec3 pos = gl_in[0].gl_Position.xyz + vec3(swayX, 0.0, swayZ); //POSIÇÃO +FLICKER
+    vec3 pos = gl_in[0].gl_Position.xyz + vec3(swayX, 0.0, swayZ); //POSIÇÃO + FLICKER
+    //FIM FLICKER
 
-    float size = mix(0.06, 0.01, vLife[0]);
+    float size = mix(0.1, 0.001, vLife[0]); //TAMANHO PARTICULAS
 
     vec3 right = vec3(ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]) * size;
     vec3 up    = vec3(ViewMatrix[0][1], ViewMatrix[1][1], ViewMatrix[2][1]) * size;

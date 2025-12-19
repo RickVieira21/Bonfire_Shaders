@@ -443,22 +443,23 @@ void initParticles() {
 
     for (auto& p : particles) {
 
-        //p.position = glm::vec3(30.0f);      
+        // Posição inicial (círculo)
+        glm::vec3 offset = randomInCircle(fireRadius);
+        p.position = fireCenter + offset;
 
-        p.position = fireCenter + randomInCircle(fireRadius);
+        // Distância ao centro (XZ)
+        float radius = glm::length(glm::vec2(offset.x, offset.z));
+        float centerFactor = 1.0f - glm::clamp(radius / fireRadius, 0.0f, 1.0f);
+
+        // Velocidade: centro sobe mais
         p.velocity = glm::vec3(
-            glm::linearRand(-0.1f, 0.1f),
-            glm::linearRand(1.5f, 2.5f),
-            glm::linearRand(-0.1f, 0.1f)
+            (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
+            glm::mix(1.5f, 3.5f, centerFactor),
+            (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
         );
 
-
-        p.velocity = glm::vec3(
-            (rand() / float(RAND_MAX) - 0.5f) * 0.3f,
-            1.0f + rand() / float(RAND_MAX),
-            (rand() / float(RAND_MAX) - 0.5f) * 0.3f
-        );
-        p.life = rand() / float(RAND_MAX);
+        // Vida normalizada (0 = nasce, 1 = morre)
+        p.life = glm::mix(0.3f, 1.0f, centerFactor);
     }
 
     glGenVertexArrays(1, &particleVAO);
@@ -495,16 +496,31 @@ void initParticles() {
 
 
 
+
 void updateParticles(double elapsed) {
 
     float dt = float(elapsed);
 
     for (auto& p : particles) {
-        p.life += dt * 0.7f; //life/altura
 
-        if (p.life > 1.0f) {
-            p.life = 0.0f;
-            p.position = fireCenter + randomInCircle(fireRadius); // glm::vec3(0.0f);
+        p.life += dt * 0.6f;
+
+        if (p.life >= 1.0f) {
+
+            // Renasce
+            glm::vec3 offset = randomInCircle(fireRadius);
+            p.position = fireCenter + offset;
+
+            float radius = glm::length(glm::vec2(offset.x, offset.z));
+            float centerFactor = 1.0f - glm::clamp(radius / fireRadius, 0.0f, 1.0f);
+
+            p.velocity = glm::vec3(
+                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
+                glm::mix(1.5f, 3.5f, centerFactor),
+                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
+            );
+
+            p.life = glm::mix(0.6f, 0.3f, centerFactor);
         }
 
         p.position += p.velocity * dt;
@@ -547,6 +563,7 @@ void MyApp::initCallback(GLFWwindow* win) {
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.05f)); // 5% do original
+        //model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0)); //falta rodar
         //model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         partNode->modelMatrix = model;
 
