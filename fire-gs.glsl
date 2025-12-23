@@ -33,7 +33,9 @@ void main() {
     vec3 pos = gl_in[0].gl_Position.xyz + vec3(swayX, 0.0, swayZ); //POSIÇÃO + FLICKER
     //FIM FLICKER
 
-    float size = mix(0.1, 0.001, vLife[0]); //TAMANHO PARTICULAS
+    //float size = mix(0.1, 0.001, vLife[0]); //TAMANHO PARTICULAS
+    float size = mix(0.3, 0.01, vLife[0]);
+
 
     vec3 right = vec3(ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]) * size;
     vec3 up    = vec3(ViewMatrix[0][1], ViewMatrix[1][1], ViewMatrix[2][1]) * size;

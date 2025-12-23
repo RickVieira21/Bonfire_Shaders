@@ -55,8 +55,12 @@ bool rightPressed = false;
 bool leftPressed = false;
 
 //Variaveis luz
-glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f);
-glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+//glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f); //lado
+glm::vec3 lightPos = glm::vec3(0.0f, -0.3f, 0.0f); //Firecenter
+
+//glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //branco
+glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //fire
+
 
 //Skybox
 mgl::Mesh* skyboxMesh = nullptr;
@@ -503,7 +507,7 @@ void updateParticles(double elapsed) {
 
     for (auto& p : particles) {
 
-        p.life += dt * 0.6f;
+        p.life += dt * 0.9f; //ALTURA DA CHAMA
 
         if (p.life >= 1.0f) {
 
