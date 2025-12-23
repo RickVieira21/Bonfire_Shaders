@@ -87,6 +87,13 @@ void main()
     vec3 V = normalize(viewPos - exPosition);
     vec3 H = normalize(L + V);
 
+    //ATENUAÇÂO
+    float distance = length(exPosition.xz - lightPos.xz);
+    float d = distance / 0.5; // normalizar pela dimensão real da fogueira (0.5 é o fireradius)
+
+    float attenuation = exp(-d * 2.5);
+    attenuation = clamp(attenuation, 0.0, 1.0);
+
     vec3 ambient = ambientStrength * lightColor;
 
     float diff = max(dot(N, L), 0.0);
@@ -96,7 +103,11 @@ void main()
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 baseColor = proceduralAsh(exPosition);
-    vec3 result = (ambient + diffuse + specular) * baseColor;
+    
+    //vec3 result = (ambient + diffuse + specular) * baseColor;
+
+    vec3 result = ambient * baseColor +
+                  attenuation * (diffuse + specular) * baseColor;
 
     FragColor = vec4(result, 1.0);
 }

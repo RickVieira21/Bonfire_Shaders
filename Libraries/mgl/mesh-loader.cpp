@@ -59,7 +59,8 @@ bool leftPressed = false;
 glm::vec3 lightPos = glm::vec3(0.0f, -0.3f, 0.0f); //Firecenter
 
 //glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //branco
-glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //fire
+glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f); //fire
+float lightIntensity = 1.0f;
 
 
 //Skybox
@@ -264,8 +265,21 @@ void MyApp::createCamera() {
 
 glm::mat4 ModelMatrix(1.0f);
 
-//enviar dados globais para o shader (luz e câmara)
+
 void MyApp::drawScene() {
+
+    float time = (float)glfwGetTime();
+
+    // Flicker LUZ
+    float flicker =
+        0.85f +
+        0.15f * sin(time * 5.0f);
+
+    // Garantir que não vai para valores estranhos
+    flicker = glm::clamp(flicker, 0.8f, 1.2f);
+
+    glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Shaders->bind();
@@ -279,7 +293,7 @@ void MyApp::drawScene() {
     //  Cor da luz (fogo)
     glUniform3fv(
         Shaders->Uniforms["lightColor"].index,
-        1, glm::value_ptr(lightColor)
+        1, glm::value_ptr(flickerLightColor)
     );
 
     //  Posição da câmara
@@ -313,7 +327,7 @@ void MyApp::drawScene() {
 
     ashShader->bind();
     glUniform3fv(ashShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
+    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
     glUniform3fv(ashShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     ashShader->unbind();
 
@@ -322,7 +336,7 @@ void MyApp::drawScene() {
 
     stonesShader->bind();
     glUniform3fv(stonesShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(lightColor));
+    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
     glUniform3fv(stonesShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     stonesShader->unbind();
 
@@ -507,7 +521,7 @@ void updateParticles(double elapsed) {
 
     for (auto& p : particles) {
 
-        p.life += dt * 0.9f; //ALTURA DA CHAMA
+        p.life += dt * 1.1f; //ALTURA DA CHAMA
 
         if (p.life >= 1.0f) {
 
