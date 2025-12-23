@@ -61,6 +61,7 @@ glm::vec3 lightPos = glm::vec3(0.0f, -0.3f, 0.0f); //Firecenter
 //glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //branco
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f); //fire
 float lightIntensity = 1.0f;
+float lightIntensityStones = 6.0f;
 
 
 //Skybox
@@ -276,6 +277,7 @@ void MyApp::drawScene() {
         0.15f * sin(time * 40.0f);
 
     float flickerAsh;
+    float flickerStones;
 
     // Garantir que não vai para valores estranhos
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
@@ -283,6 +285,7 @@ void MyApp::drawScene() {
 
     glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
     glm::vec3 flickerLightColorAsh = lightColor * flickerAsh * lightIntensity;
+    glm::vec3 flickerLightColorStones = lightColor * flicker * lightIntensityStones;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -340,7 +343,7 @@ void MyApp::drawScene() {
 
     stonesShader->bind();
     glUniform3fv(stonesShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
+    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColorStones));
     glUniform3fv(stonesShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     stonesShader->unbind();
 
