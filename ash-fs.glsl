@@ -87,12 +87,17 @@ void main()
     vec3 V = normalize(viewPos - exPosition);
     vec3 H = normalize(L + V);
 
-    //ATENUAÇÂO
-    float distance = length(exPosition.xz - lightPos.xz);
-    float d = distance / 0.5; // normalizar pela dimensão real da fogueira (0.5 é o fireradius)
+    //CENTRO LARANJA
+    vec3 fireCenter = vec3(0.0f, -0.3f, 0.0f);
+    float distToFire = distance(exPosition.xz, fireCenter.xz);
 
-    float attenuation = exp(-d * 2.5);
-    attenuation = clamp(attenuation, 0.0, 1.0);
+    // 1.0 no centro, 0.0 fora
+    float heat = 1.0 - smoothstep(0.0, 0.9, distToFire); //segundo paraemtro é fireradius
+
+    // controlar quão rápido desaparece
+    heat = pow(heat, 1.5); //fireradius
+
+    vec3 fireTint = vec3(1.0, 0.35, 0.15); // laranja/quente
 
     vec3 ambient = ambientStrength * lightColor;
 
@@ -103,11 +108,11 @@ void main()
     vec3 specular = specularStrength * spec * lightColor;
 
     vec3 baseColor = proceduralAsh(exPosition);
-    
-    //vec3 result = (ambient + diffuse + specular) * baseColor;
 
-    vec3 result = ambient * baseColor +
-                  attenuation * (diffuse + specular) * baseColor;
+    // mistura da cor base com calor
+    baseColor = mix(baseColor, fireTint, heat * 6.0);
+
+    vec3 result = (ambient + diffuse + specular) * baseColor;
 
     FragColor = vec4(result, 1.0);
 }

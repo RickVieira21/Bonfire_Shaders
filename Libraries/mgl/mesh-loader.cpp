@@ -273,12 +273,16 @@ void MyApp::drawScene() {
     // Flicker LUZ
     float flicker =
         0.85f +
-        0.15f * sin(time * 5.0f);
+        0.15f * sin(time * 40.0f);
+
+    float flickerAsh;
 
     // Garantir que não vai para valores estranhos
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
+    flickerAsh = glm::clamp(flicker, 0.98f, 1.2f);
 
     glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
+    glm::vec3 flickerLightColorAsh = lightColor * flickerAsh * lightIntensity;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -327,7 +331,7 @@ void MyApp::drawScene() {
 
     ashShader->bind();
     glUniform3fv(ashShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
+    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColorAsh));
     glUniform3fv(ashShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     ashShader->unbind();
 
@@ -653,7 +657,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     ashModel = glm::scale(ashModel, glm::vec3(1.0f));
     ashNode->modelMatrix = ashModel;
 
-    ashNode->ambientStrength = 0.7f;
+    ashNode->ambientStrength = 0.9f;
     ashNode->specularStrength = 0.5f;
     ashNode->shininess = 1.0f;
 
