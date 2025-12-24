@@ -56,7 +56,7 @@ bool leftPressed = false;
 
 //Variaveis luz
 //glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f); //lado
-glm::vec3 lightPos = glm::vec3(0.0f, -0.3f, 0.0f); //Firecenter
+glm::vec3 lightPos = glm::vec3(0.0f, 0.8f, 0.0f); //Firecenter
 
 //glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //branco
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f); //fire
@@ -72,6 +72,7 @@ GLuint skyboxCubemap = 0;
 //Procedural
 mgl::ShaderProgram* ashShader = nullptr;
 mgl::ShaderProgram* stonesShader = nullptr;
+mgl::ShaderProgram* embersShader = nullptr;
 
 //Particles
 mgl::ShaderProgram* fireShader = nullptr;
@@ -207,7 +208,6 @@ void MyApp::createShaderPrograms() {
 
     fireShader = new mgl::ShaderProgram();
 
-    // Shaders
     fireShader->addShader(GL_VERTEX_SHADER, "fire-vs.glsl");
     fireShader->addShader(GL_GEOMETRY_SHADER, "fire-gs.glsl");
     fireShader->addShader(GL_FRAGMENT_SHADER, "fire-fs.glsl");
@@ -220,11 +220,36 @@ void MyApp::createShaderPrograms() {
     //fireShader->addUniform("fireColor");     
     //fireShader->addUniform("particleSize");  
 
-    // Camera UBO (OBRIGATÓRIO)
+    // Camera UBO 
     fireShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
 
-    // Criar programa
     fireShader->create();
+
+    // ==================== EMBERS SHADER ====================
+
+    embersShader = new mgl::ShaderProgram();
+    embersShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
+    embersShader->addShader(GL_FRAGMENT_SHADER, "embers-fs.glsl");
+
+    embersShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+    embersShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+
+    embersShader->addUniform(mgl::MODEL_MATRIX);
+    embersShader->addUniform("lightPos");
+    embersShader->addUniform("lightColor");
+    embersShader->addUniform("viewPos");
+
+    embersShader->addUniform("fireCenter");
+    embersShader->addUniform("fireRadius");
+    embersShader->addUniform("time");
+
+    embersShader->addUniform("ambientStrength");
+    embersShader->addUniform("specularStrength");
+    embersShader->addUniform("shininess");
+
+    embersShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+    embersShader->create();
+
 
 }
 
@@ -274,7 +299,7 @@ void MyApp::drawScene() {
     // Flicker LUZ
     float flicker =
         0.85f +
-        0.15f * sin(time * 40.0f);
+        0.15f * sin(time * 5.0f); //ritmo de flicker
 
     float flickerAsh;
     float flickerStones;
@@ -373,6 +398,22 @@ void MyApp::drawScene() {
 
         fireShader->unbind();
     }
+
+    // ==================== EMBERS PROCEDURAL ====================
+
+    embersShader->bind();
+
+    glUniform3fv(embersShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
+    glUniform3fv(embersShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColorStones));
+    glUniform3fv(embersShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
+
+    glUniform3fv(embersShader->Uniforms["fireCenter"].index, 1, glm::value_ptr(fireCenter));
+    glUniform1f(embersShader->Uniforms["fireRadius"].index, fireRadius);
+
+    glUniform1f(embersShader->Uniforms["time"].index, (float)glfwGetTime());
+
+    embersShader->unbind();
+
 
 
 }
@@ -528,7 +569,7 @@ void updateParticles(double elapsed) {
 
     for (auto& p : particles) {
 
-        p.life += dt * 1.1f; //ALTURA DA CHAMA
+        p.life += dt * 0.6f; //ALTURA DA CHAMA
 
         if (p.life >= 1.0f) {
 
@@ -541,7 +582,7 @@ void updateParticles(double elapsed) {
 
             p.velocity = glm::vec3(
                 (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
-                glm::mix(1.5f, 3.5f, centerFactor),
+                glm::mix(0.5f, 2.0f, centerFactor),
                 (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
             );
 
@@ -644,7 +685,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     // ==================== SKYBOX ====================
 
     skyboxCubemap = loadCubemapFromCross(
-        "assets/skybox/skybox.png"
+        "assets/skybox/night_sky.png"
     );
 
     // ==================== Ash Procedural ====================
@@ -707,6 +748,35 @@ void MyApp::initCallback(GLFWwindow* win) {
 
         rootNode->addChild(stoneNode);
     }
+
+    std::vector<glm::vec3> emberPositions = {
+    glm::vec3(0.58f, 0.2f, -0.3f),
+    glm::vec3(-0.4f, 0.2f, -0.5f),
+    glm::vec3(-0.2f, 0.3f, 0.5f),
+    glm::vec3(0.5f, 0.2f, 0.3f)
+    };
+
+
+    for (const glm::vec3& offset : emberPositions) {
+
+        SceneNode* emberStone = new SceneNode();
+        emberStone->mesh = stoneMesh;          // mesma mesh
+        emberStone->shader = embersShader;     // shader das brasas
+
+        glm::vec3 pos = fireCenter + offset;
+
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+        model = glm::scale(model, glm::vec3(0.06f)); // pequenas
+        emberStone->modelMatrix = model;
+
+        emberStone->ambientStrength = 0.12f;
+        emberStone->specularStrength = 0.25f;
+        emberStone->shininess = 16.0f;
+
+        rootNode->addChild(emberStone);
+    }
+
+
 
 }
 

@@ -38,6 +38,7 @@
     <None Include="blinnPhong-fs.glsl" />
     <None Include="blinnPhong-vs.glsl" />
     <None Include="ash-fs.glsl" />
+    <None Include="embers-fs.glsl" />
     <None Include="fire-fs.glsl" />
     <None Include="fire-gs.glsl" />
     <None Include="fire-vs.glsl" />
