@@ -55,6 +55,9 @@ bool rightPressed = false;
 bool leftPressed = false;
 
 //Variaveis luz
+
+mgl::Mesh* lightMesh = nullptr;
+
 //glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f); //lado
 glm::vec3 lightPos = glm::vec3(0.0f, 0.8f, 0.0f); //Firecenter
 
@@ -70,7 +73,11 @@ mgl::ShaderProgram* skyboxShader = nullptr;
 GLuint skyboxCubemap = 0;
 
 //Procedural
+
+mgl::Mesh* ashMesh = nullptr;
 mgl::ShaderProgram* ashShader = nullptr;
+
+mgl::Mesh* stoneMesh = nullptr;
 mgl::ShaderProgram* stonesShader = nullptr;
 mgl::ShaderProgram* embersShader = nullptr;
 
@@ -92,23 +99,42 @@ mgl::ShaderProgram* terrainShader = nullptr;
 ///////////////////////////////////////////////////////////////////////// MESHES
 
 void MyApp::createMeshes() {
+
+    // sword mesh
     Mesh = new mgl::Mesh();
     Mesh->joinIdenticalVertices();
     Mesh->create("assets/models/coiledsword.obj");
-
     if (!Mesh->hasNormals())
         Mesh->generateNormals();
 
+    // light (cube) mesh
+    lightMesh = new mgl::Mesh();
+    lightMesh->create("assets/models/cube-v.obj");
+    if (!lightMesh->hasNormals())
+        lightMesh->generateNormals();
 
-    // Mesh da skybox 
+    // skybox (cube) mesh
     skyboxMesh = new mgl::Mesh();
     skyboxMesh->create("assets/models/cube-v.obj");
 
+    // ash mesh
+    ashMesh = new mgl::Mesh();
+    ashMesh->create("assets/models/ash.obj");
+
+    // stones + emberstones mesh 
+    stoneMesh = new mgl::Mesh();
+    stoneMesh->create("assets/models/stone.obj");
+
+    if (!stoneMesh->hasNormals())
+        stoneMesh->generateNormals();
+
+    // terrain mesh
     terrainMesh = new mgl::Mesh();
     terrainMesh->create("assets/models/ground.obj");
-
     if (!terrainMesh->hasNormals())
         terrainMesh->generateNormals();
+
+
 
 }
 
@@ -730,13 +756,6 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     // Criar nó da luz
     SceneNode* lightNode = new SceneNode();
-
-    // Criar cubo simples 
-    mgl::Mesh* lightMesh = new mgl::Mesh();
-    lightMesh->create("assets/models/cube-v.obj");
-    if (!lightMesh->hasNormals())
-        lightMesh->generateNormals();
-
     lightNode->mesh = lightMesh;
     lightNode->shader = Shaders;
 
@@ -765,9 +784,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     // ==================== Ash Procedural ====================
 
     SceneNode* ashNode = new SceneNode();
-    ashNode->mesh = new mgl::Mesh();
-    ashNode->mesh->create("assets/models/ash.obj");
-
+    ashNode->mesh = ashMesh;
     ashNode->shader = ashShader;
 
     //Transformações...
@@ -783,12 +800,6 @@ void MyApp::initCallback(GLFWwindow* win) {
 
 
     // ==================== Stone Procedural ====================
-
-    mgl::Mesh* stoneMesh = new mgl::Mesh();
-    stoneMesh->create("assets/models/stone.obj");
-
-    if (!stoneMesh->hasNormals())
-        stoneMesh->generateNormals();
 
     int stoneCount = 12;
     float radius = 1.2f;
@@ -857,22 +868,16 @@ void MyApp::initCallback(GLFWwindow* win) {
 
     terrainNode->shader = terrainShader;
 
-    // Transformação
     glm::mat4 terrainModel = glm::mat4(1.0f);
     terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, -0.8f, -3.0f));
-    terrainModel = glm::scale(terrainModel, glm::vec3(10.0f)); // grande
+    terrainModel = glm::scale(terrainModel, glm::vec3(10.0f)); 
     terrainNode->modelMatrix = terrainModel;
 
-    // Material
     terrainNode->ambientStrength = 0.25f;
     terrainNode->specularStrength = 0.05f;
     terrainNode->shininess = 8.0f;
 
-    // Adicionar à cena
     rootNode->addChild(terrainNode);
-
-
-
 
 }
 
