@@ -31,10 +31,11 @@ public:
         children.push_back(child);
     }
 
-    //antes de desenhar, enviamos os dados ao shader
+    //antes de desenhar, enviamos os dados ao shader - “automatically handles matrices”
     void draw(const glm::mat4& parentMatrix) {
         glm::mat4 globalMatrix = parentMatrix * modelMatrix;
 
+        //“handles shaders”
         if (mesh && shader) {
             shader->bind();
 

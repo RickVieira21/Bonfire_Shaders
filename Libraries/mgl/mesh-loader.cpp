@@ -83,6 +83,9 @@ glm::vec3 fireCenter = glm::vec3(0.0f, -0.3f, 0.0f);
 std::vector<Particle> particles;
 GLuint particleVAO, particleVBO;
 
+//Terrain
+mgl::Mesh* terrainMesh = nullptr;
+
 
 
 ///////////////////////////////////////////////////////////////////////// MESHES
@@ -99,6 +102,13 @@ void MyApp::createMeshes() {
     // Mesh da skybox 
     skyboxMesh = new mgl::Mesh();
     skyboxMesh->create("assets/models/cube-v.obj");
+
+    terrainMesh = new mgl::Mesh();
+    terrainMesh->create("assets/models/ground.obj");
+
+    if (!terrainMesh->hasNormals())
+        terrainMesh->generateNormals();
+
 }
 
 
@@ -629,7 +639,7 @@ void MyApp::initCallback(GLFWwindow* win) {
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(0.05f)); // 5% do original
-        //model = glm::rotate(model, glm::radians(rotation), glm::vec3(0, 1, 0)); //falta rodar
+        model = glm::rotate(model,glm::radians(-12.0f), glm::vec3(0.0f, 0.0f, 1.0f));
         //model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         partNode->modelMatrix = model;
 
@@ -775,6 +785,28 @@ void MyApp::initCallback(GLFWwindow* win) {
 
         rootNode->addChild(emberStone);
     }
+
+    // ==================== TERRAIN ====================
+
+    SceneNode* terrainNode = new SceneNode();
+    terrainNode->mesh = terrainMesh;
+
+    terrainNode->shader = stonesShader;
+
+    // Transformação
+    glm::mat4 terrainModel = glm::mat4(1.0f);
+    terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, -0.8f, -3.0f));
+    terrainModel = glm::scale(terrainModel, glm::vec3(10.0f)); // grande
+    terrainNode->modelMatrix = terrainModel;
+
+    // Material
+    terrainNode->ambientStrength = 0.25f;
+    terrainNode->specularStrength = 0.05f;
+    terrainNode->shininess = 8.0f;
+
+    // Adicionar à cena
+    rootNode->addChild(terrainNode);
+
 
 
 
