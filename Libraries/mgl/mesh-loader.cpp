@@ -85,6 +85,7 @@ GLuint particleVAO, particleVBO;
 
 //Terrain
 mgl::Mesh* terrainMesh = nullptr;
+mgl::ShaderProgram* terrainShader = nullptr;
 
 
 
@@ -260,6 +261,37 @@ void MyApp::createShaderPrograms() {
     embersShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
     embersShader->create();
 
+    // ==================== TERRAIN SHADER ====================
+
+    terrainShader = new mgl::ShaderProgram();
+    terrainShader->addShader(GL_VERTEX_SHADER, "procedural-vs.glsl");
+    terrainShader->addShader(GL_FRAGMENT_SHADER, "terrain-fs.glsl");
+
+    // atributos
+    terrainShader->addAttribute(mgl::POSITION_ATTRIBUTE, mgl::Mesh::POSITION);
+    terrainShader->addAttribute(mgl::NORMAL_ATTRIBUTE, mgl::Mesh::NORMAL);
+
+    // uniforms base
+    terrainShader->addUniform(mgl::MODEL_MATRIX);
+    terrainShader->addUniform("lightPos");
+    terrainShader->addUniform("lightColor");
+    terrainShader->addUniform("viewPos");
+
+    // material
+    terrainShader->addUniform("ambientStrength");
+    terrainShader->addUniform("specularStrength");
+    terrainShader->addUniform("shininess");
+
+    // fogo
+    terrainShader->addUniform("fireRadius");
+    terrainShader->addUniform("fireColor");
+
+    // camera UBO
+    terrainShader->addUniformBlock(mgl::CAMERA_BLOCK, UBO_BP);
+
+    terrainShader->create();
+
+
 
 }
 
@@ -311,8 +343,7 @@ void MyApp::drawScene() {
         0.85f +
         0.15f * sin(time * 5.0f); //ritmo de flicker
 
-    float flickerAsh;
-    float flickerStones;
+    float flickerAsh;;
 
     // Garantir que não vai para valores estranhos
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
@@ -423,6 +454,39 @@ void MyApp::drawScene() {
     glUniform1f(embersShader->Uniforms["time"].index, (float)glfwGetTime());
 
     embersShader->unbind();
+
+
+    // ==================== TERRAIN ====================
+
+    terrainShader->bind();
+
+    glUniform3fv(
+        terrainShader->Uniforms["lightPos"].index,
+        1, glm::value_ptr(lightPos)
+    );
+
+    glUniform3fv(
+        terrainShader->Uniforms["lightColor"].index,
+        1, glm::value_ptr(flickerLightColor)
+    );
+
+    glUniform3fv(
+        terrainShader->Uniforms["viewPos"].index,
+        1, glm::value_ptr(camPos)
+    );
+
+    // fogo
+    glUniform1f(
+        terrainShader->Uniforms["fireRadius"].index,
+        3.5f
+    );
+
+    glUniform3fv(
+        terrainShader->Uniforms["fireColor"].index,
+        1, glm::value_ptr(lightColor)
+    );
+
+    terrainShader->unbind();
 
 
 
@@ -791,7 +855,7 @@ void MyApp::initCallback(GLFWwindow* win) {
     SceneNode* terrainNode = new SceneNode();
     terrainNode->mesh = terrainMesh;
 
-    terrainNode->shader = stonesShader;
+    terrainNode->shader = terrainShader;
 
     // Transformação
     glm::mat4 terrainModel = glm::mat4(1.0f);
