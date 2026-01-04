@@ -16,8 +16,8 @@ uniform float specularStrength;
 uniform float shininess;
 
 // fogo
-uniform vec3 fireCenter;
-uniform float fireRadius;
+//uniform vec3 fireCenter;
+//uniform float fireRadius;
 uniform float time;
 
 // ----------------- Noise -----------------
@@ -38,29 +38,6 @@ float noise(vec3 p) {
     );
 }
 
-// ----------------- Ember Material -----------------
-
-vec3 proceduralEmber(vec3 pos, float heat) {
-
-    float cracks = noise(pos * 6.0);
-    float cracks2 = noise(pos * 12.0);
-    float grain = noise(pos * 40.0);
-
-    float veins = abs(cracks - cracks2);
-    veins = smoothstep(0.01, 0.15, veins);
-
-    float sparks = smoothstep(0.85, 1.0, grain);
-
-    float mask = max(veins, sparks);
-    mask = pow(mask, 0.4);
-
-    vec3 coal  = vec3(0.03);
-    vec3 ember = vec3(1.2, 0.5, 0.15);
-
-    return mix(coal, ember, mask * heat);
-}
-
-
 // ----------------- Main -----------------
 
 void main() {
@@ -70,29 +47,43 @@ void main() {
     vec3 V = normalize(viewPos - exPosition);
     vec3 H = normalize(L + V);
 
-    // distância ao fogo
-    float dist = distance(exPosition.xz, fireCenter.xz);
-    float heat = 1.0 - smoothstep(0.0, fireRadius * 0.8, dist);
-    heat = pow(heat, 1.8);
 
-    // flicker térmico
-    heat *= 0.7 + 0.3 * sin(time * 3.0 + exPosition.x * 5.0);
+// ---------------- CRACK MASK ----------------
 
-    vec3 baseColor = proceduralEmber(exPosition, heat);
+float cracks = noise(exPosition * 8.0);
+float grain  = noise(exPosition * 25.0);
 
-    // iluminação clássica
-    vec3 ambient = ambientStrength * lightColor;
-    float diff = max(dot(N, L), 0.0);
-    vec3 diffuse = diff * lightColor;
+float mask = smoothstep(0.5, 0.8, cracks);
+mask *= grain;
 
-    float spec = pow(max(dot(N, H), 0.0), shininess);
-    vec3 specular = specularStrength * spec * lightColor;
+// ---------------- CORES ----------------
 
-    // emissão 
-    vec3 emissive = vec3(1.2, 0.5, 0.15) * heat * 3.0;
+vec3 coalColor  = vec3(0.03, 0.03, 0.03);
+vec3 emberColor = vec3(1.0, 0.35, 0.08); // fogo puro
 
+vec3 baseColor = mix(coalColor, emberColor, mask);
 
-    vec3 result = (ambient + diffuse + specular) * baseColor + emissive;
+// ---------------- ILUMINAÇÃO NORMAL ----------------
 
-    FragColor = vec4(result, 1.0);
+vec3 ambient = ambientStrength * lightColor;
+float diff = max(dot(N, L), 0.0);
+vec3 diffuse = diff * lightColor;
+
+float spec = pow(max(dot(N, H), 0.0), shininess);
+vec3 specular = specularStrength * spec * lightColor;
+
+vec3 litColor = (ambient + diffuse + specular) * baseColor;
+
+// ---------------- EMISSÃO + PULSE ----------------
+
+vec3 emissive = emberColor * mask * 1 * 3.0;
+
+float slowPulse = 0.4 + 0.4 * sin(time + exPosition.x * 3.0);
+emissive *= slowPulse;
+
+// soma direta (não depende da luz!)
+vec3 finalColor = litColor + emissive;
+
+FragColor = vec4(finalColor, 1.0);
 }
+

@@ -239,8 +239,8 @@ void MyApp::createShaderPrograms() {
     embersShader->addUniform("lightColor");
     embersShader->addUniform("viewPos");
 
-    embersShader->addUniform("fireCenter");
-    embersShader->addUniform("fireRadius");
+    //embersShader->addUniform("fireCenter");
+    //embersShader->addUniform("fireRadius");
     embersShader->addUniform("time");
 
     embersShader->addUniform("ambientStrength");
@@ -769,9 +769,9 @@ void MyApp::initCallback(GLFWwindow* win) {
         model = glm::scale(model, glm::vec3(0.06f)); // pequenas
         emberStone->modelMatrix = model;
 
-        emberStone->ambientStrength = 0.12f;
-        emberStone->specularStrength = 0.25f;
-        emberStone->shininess = 16.0f;
+        emberStone->ambientStrength = 0.18f;
+        emberStone->specularStrength = 0.03f;
+        emberStone->shininess = 1.0f;
 
         rootNode->addChild(emberStone);
     }
