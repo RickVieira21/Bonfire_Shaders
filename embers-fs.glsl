@@ -59,7 +59,7 @@ mask *= grain;
 // ---------------- CORES ----------------
 
 vec3 coalColor  = vec3(0.03, 0.03, 0.03);
-vec3 emberColor = vec3(1.0, 0.35, 0.08); // fogo puro
+vec3 emberColor = vec3(1.0, 0.35, 0.08); 
 
 vec3 baseColor = mix(coalColor, emberColor, mask);
 
@@ -81,7 +81,7 @@ vec3 emissive = emberColor * mask * 1 * 3.0;
 float slowPulse = 0.4 + 0.4 * sin(time + exPosition.x * 3.0);
 emissive *= slowPulse;
 
-// soma direta (não depende da luz!)
+// soma direta (não depende da luz)
 vec3 finalColor = litColor + emissive;
 
 FragColor = vec4(finalColor, 1.0);

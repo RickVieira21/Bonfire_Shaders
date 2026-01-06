@@ -65,6 +65,7 @@ glm::vec3 lightPos = glm::vec3(0.0f, 0.8f, 0.0f); //Firecenter
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f); //fire
 float lightIntensity = 1.0f;
 float lightIntensityStones = 6.0f;
+float lightIntensityTerrain = 0.5f;
 
 
 //Skybox
@@ -367,17 +368,23 @@ void MyApp::drawScene() {
     // Flicker LUZ
     float flicker =
         0.85f +
-        0.15f * sin(time * 5.0f); //ritmo de flicker
+        0.15f * sin(time * 3.0f); //ritmo de flicker
 
-    float flickerAsh;;
+    float flickerTerrain =
+        0.85f +
+        0.15f * sin(time * 300.0f); //ritmo de flicker
+
+    float flickerAsh;
 
     // Garantir que não vai para valores estranhos
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
     flickerAsh = glm::clamp(flicker, 0.98f, 1.2f);
+    flickerTerrain = glm::clamp(flicker, 0.8f, 1.2f);
 
     glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
     glm::vec3 flickerLightColorAsh = lightColor * flickerAsh * lightIntensity;
     glm::vec3 flickerLightColorStones = lightColor * flicker * lightIntensityStones;
+    glm::vec3 flickerLightColorTerrain = lightColor * flickerTerrain * lightIntensityTerrain;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -450,7 +457,7 @@ void MyApp::drawScene() {
         float time = (float)glfwGetTime();
 
         fireShader->bind();
-        glUniform1f(fireShader->Uniforms["time"].index, time);;
+        glUniform1f(fireShader->Uniforms["time"].index, time);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -493,7 +500,7 @@ void MyApp::drawScene() {
 
     glUniform3fv(
         terrainShader->Uniforms["lightColor"].index,
-        1, glm::value_ptr(flickerLightColor)
+        1, glm::value_ptr(flickerLightColorTerrain)
     );
 
     glUniform3fv(
@@ -669,7 +676,7 @@ void updateParticles(double elapsed) {
 
     for (auto& p : particles) {
 
-        p.life += dt * 0.6f; //ALTURA DA CHAMA
+        p.life += dt * 0.7f; //ALTURA DA CHAMA
 
         if (p.life >= 1.0f) {
 
@@ -771,8 +778,8 @@ void MyApp::initCallback(GLFWwindow* win) {
     lightNode->specularStrength = 0.0f;
     lightNode->shininess = 1.0f;
 
-    // Adicionar à cena
-    rootNode->addChild(lightNode);
+    // Adicionar DEBUG CUBE à cena
+    //rootNode->addChild(lightNode);
 
 
     // ==================== SKYBOX ====================
@@ -869,11 +876,11 @@ void MyApp::initCallback(GLFWwindow* win) {
     terrainNode->shader = terrainShader;
 
     glm::mat4 terrainModel = glm::mat4(1.0f);
-    terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, -0.8f, -3.0f));
-    terrainModel = glm::scale(terrainModel, glm::vec3(10.0f)); 
+    terrainModel = glm::translate(terrainModel, glm::vec3(0.0f, -1.2f, -3.0f));
+    terrainModel = glm::scale(terrainModel, glm::vec3(20.0f)); 
     terrainNode->modelMatrix = terrainModel;
 
-    terrainNode->ambientStrength = 0.25f;
+    terrainNode->ambientStrength = 0.35f;
     terrainNode->specularStrength = 0.05f;
     terrainNode->shininess = 8.0f;
 

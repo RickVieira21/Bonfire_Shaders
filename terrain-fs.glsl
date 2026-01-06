@@ -1,23 +1,37 @@
 #version 330 core
 
+// Posicao do fragmento em coordenadas de mundo
 in vec3 exPosition;
+
+// Normal do fragmento
 in vec3 exNormal;
 
 out vec4 FragColor;
 
-// ----------------- Iluminação -----------------
-uniform vec3 lightPos;     // posição do fogo
-uniform vec3 lightColor;   // cor do fogo
+// ----------------- Iluminacao -----------------
+
+// Posicao da luz (fogueira)
+uniform vec3 lightPos;
+
+// Cor da luz
+uniform vec3 lightColor;
+
+// Posicao da camara
 uniform vec3 viewPos;
 
-// material
+// ----------------- Material -----------------
+
 uniform float ambientStrength;
 uniform float specularStrength;
 uniform float shininess;
 
-// influência do fogo
-uniform float fireRadius;   // raio de influência do fogo
-uniform vec3 fireColor;     // cor quente (laranja/vermelho)
+// ----------------- Influencia do fogo -----------------
+
+// Raio de influencia termica da fogueira
+uniform float fireRadius;
+
+// Cor quente do fogo (laranja/vermelho)
+uniform vec3 fireColor;
 
 // ----------------- Noise -----------------
 
@@ -47,23 +61,18 @@ float noise(vec3 p) {
     );
 }
 
-// ----------------- Material (pedra queimada) -----------------
+// ----------------- Material Procedural -----------------
 
+// Pedra/terra queimada para o terreno
 vec3 proceduralCharredStone(vec3 pos) {
 
     vec3 p = pos * 2.0;
 
-    float base   = noise(p * 0.8);
-    float veins  = noise(p * 3.5);
-    float grain  = noise(p * 10.0);
+    float base  = noise(p * 8.8);
 
     base  = pow(base, 1.3);
-    veins = pow(veins, 2.2);
-    grain = pow(grain, 3.0);
 
     float stone = base;
-    stone = mix(stone, veins, 0.5);
-    stone = mix(stone, grain, 0.2);
 
     vec3 deepBlack = vec3(0.03, 0.03, 0.03);
     vec3 charcoal  = vec3(0.12, 0.12, 0.12);
@@ -84,27 +93,29 @@ void main()
     vec3 V = normalize(viewPos - exPosition);
     vec3 H = normalize(L + V);
 
-    // distância ao fogo
-    float distToFire = distance(exPosition, lightPos);
+    // Distancia do fragmento ao centro da fogueira
+    float distToFire = distance(exPosition, lightPos) / 1.5;
 
-    // influência térmica
+    // Factor de influencia termica (1 perto, 0 longe)
     float fireInfluence = 1.4 - smoothstep(0.0, fireRadius, distToFire);
 
-    // iluminação baseada na distância
+    // Iluminacao dependente da distancia ao fogo
     vec3 ambient  = ambientStrength * lightColor * fireInfluence;
-    float diff    = max(dot(N, L), 0.0);
-    vec3 diffuse  = diff * lightColor * fireInfluence;
+
+    float diff = max(dot(N, L), 0.0);
+    vec3 diffuse = diff * lightColor * fireInfluence;
 
     float spec = pow(max(dot(N, H), 0.0), shininess);
     vec3 specular = specularStrength * spec * lightColor * fireInfluence;
 
-    // cor base do terreno
+    // Cor base do terreno
     vec3 baseColor = proceduralCharredStone(exPosition);
 
-    // tingir terreno com calor do fogo
+    // Terreno com tons quentes perto do fogo
     vec3 emberTint = fireColor * fireInfluence;
-    baseColor = mix(baseColor, emberTint, fireInfluence * 0.6);
+    baseColor = mix(baseColor, emberTint, fireInfluence * 1.0);
 
     vec3 result = (ambient + diffuse + specular) * baseColor;
+
     FragColor = vec4(result, 1.0);
 }
