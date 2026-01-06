@@ -64,8 +64,8 @@ glm::vec3 lightPos = glm::vec3(0.0f, 0.8f, 0.0f); //Firecenter
 //glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f); //branco
 glm::vec3 lightColor = glm::vec3(1.0f, 0.6f, 0.3f); //fire
 float lightIntensity = 1.0f;
-float lightIntensityStones = 6.0f;
-float lightIntensityTerrain = 0.5f;
+float lightIntensityStones = 8.0f;
+float lightIntensityTerrain = 0.45f;
 
 
 //Skybox
@@ -368,23 +368,23 @@ void MyApp::drawScene() {
     // Flicker LUZ
     float flicker =
         0.85f +
-        0.15f * sin(time * 3.0f); //ritmo de flicker
+        0.15f * sin(time * 4.0f); //ritmo de flicker
 
-    float flickerTerrain =
+    // Flicker Stones
+    float flickerStones =
         0.85f +
-        0.15f * sin(time * 300.0f); //ritmo de flicker
+        0.15f * sin(time * 1.5f); //ritmo de flicker
 
-    float flickerAsh;
+
 
     // Garantir que não vai para valores estranhos
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
-    flickerAsh = glm::clamp(flicker, 0.98f, 1.2f);
-    flickerTerrain = glm::clamp(flicker, 0.8f, 1.2f);
+    flickerStones = glm::clamp(flickerStones, 0.05f, 2.0f);
 
     glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
-    glm::vec3 flickerLightColorAsh = lightColor * flickerAsh * lightIntensity;
-    glm::vec3 flickerLightColorStones = lightColor * flicker * lightIntensityStones;
-    glm::vec3 flickerLightColorTerrain = lightColor * flickerTerrain * lightIntensityTerrain;
+    glm::vec3 flickerLightColorAsh = lightColor * flickerStones * lightIntensity;
+    glm::vec3 flickerLightColorStones = lightColor * flickerStones * lightIntensityStones;
+    glm::vec3 flickerLightColorTerrain = lightColor * flickerStones * lightIntensityTerrain;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
