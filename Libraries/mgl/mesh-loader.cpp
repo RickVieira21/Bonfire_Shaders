@@ -627,12 +627,12 @@ void initParticles() {
         // Velocidade: centro sobe mais
         p.velocity = glm::vec3(
             (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
-            glm::mix(1.5f, 3.5f, centerFactor),
+            glm::mix(0.5f, 2.0f, centerFactor),
             (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
         );
 
         // Vida normalizada (0 = nasce, 1 = morre)
-        p.life = glm::mix(0.3f, 1.0f, centerFactor);
+        p.life = glm::mix(0.6f, 0.3f, centerFactor);
     }
 
     glGenVertexArrays(1, &particleVAO);
@@ -673,6 +673,7 @@ void initParticles() {
 void updateParticles(double elapsed) {
 
     float dt = float(elapsed);
+    dt = glm::clamp(dt, 0.0f, 0.033f); // max ~30 FPS
 
     for (auto& p : particles) {
 
