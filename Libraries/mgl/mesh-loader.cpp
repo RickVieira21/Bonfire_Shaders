@@ -150,6 +150,8 @@ void MyApp::createMeshes() {
 ///////////////////////////////////////////////////////////////////////// SHADER
 
 void MyApp::createShaderPrograms() {
+
+    // ============== SWORD ====================
     Shaders = new mgl::ShaderProgram();
 
     Shaders->addShader(GL_VERTEX_SHADER, "blinnPhong-vs.glsl");
@@ -424,8 +426,16 @@ void MyApp::drawScene() {
         1, glm::value_ptr(lightPos)
     );
 
+    glm::vec3 effectiveLightColor = lightEnabled ? flickerLightColor : glm::vec3(0.0f);
+
+    glUniform3fv(
+        Shaders->Uniforms["lightColor"].index,
+        1, glm::value_ptr(effectiveLightColor)
+    );
+
+
     //lightColor
-    glUniform3fv(Shaders->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
+    //glUniform3fv(Shaders->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
 
 
     //  Posição da câmara
@@ -459,7 +469,10 @@ void MyApp::drawScene() {
 
     ashShader->bind();
     glUniform3fv(ashShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColorAsh));
+
+    glm::vec3 effectiveAshLightColor = lightEnabled ? flickerLightColorAsh : glm::vec3(0.0f);
+    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(effectiveAshLightColor));
+
     glUniform3fv(ashShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     ashShader->unbind();
 
@@ -468,7 +481,10 @@ void MyApp::drawScene() {
 
     stonesShader->bind();
     glUniform3fv(stonesShader->Uniforms["lightPos"].index, 1, glm::value_ptr(lightPos));
-    glUniform3fv(stonesShader->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColorStones));
+
+    glm::vec3 effectiveStonesLightColor = lightEnabled ? flickerLightColorStones : glm::vec3(0.0f);
+    glUniform3fv(ashShader->Uniforms["lightColor"].index, 1, glm::value_ptr(effectiveStonesLightColor));
+;
     glUniform3fv(stonesShader->Uniforms["viewPos"].index, 1, glm::value_ptr(camPos));
     stonesShader->unbind();
 
@@ -1015,6 +1031,10 @@ void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int 
     }
 
     fireBase = glm::clamp(fireBase, 0.5f, 1.5f);
+
+    if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+        lightEnabled = !lightEnabled;
+    }
 }
 
 

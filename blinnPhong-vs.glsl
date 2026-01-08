@@ -10,21 +10,11 @@ layout(location = 2) in vec3 inNormal;
 layout(location = 3) in vec2 inTexcoord;
 
 
-// ==================== SAIDAS PARA O FRAGMENT SHADER ====================
-
-// Posicao do fragmento em espaco de mundo
-out vec3 fragPos;
-
-// Normal interpolada em espaco de mundo
-out vec3 fragNormal;
-
-// Coordenadas de textura interpoladas
-out vec2 exTexcoord;
+out vec3 fragPos; // Posicao do fragmento em espaco de mundo
+out vec3 fragNormal; // Normal interpolada em espaco de mundo
+out vec2 exTexcoord; // Coordenadas de textura interpoladas
 
 
-// ==================== UNIFORMS ====================
-
-// Matriz de modelo 
 uniform mat4 ModelMatrix;
 
 // Uniform Buffer Object da camara (Contem as matrizes de view e projection)
@@ -33,8 +23,6 @@ uniform Camera {
     mat4 ProjectionMatrix;
 };
 
-
-// ==================== MAIN ====================
 
 void main(void)
 {
