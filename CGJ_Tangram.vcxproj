@@ -32,7 +32,7 @@
     <ClInclude Include="Libraries\mgl\mglApp.hpp" />
     <ClInclude Include="Libraries\mgl\OrbitalCamera.hpp" />
     <ClInclude Include="Libraries\mgl\Particle.hpp" />
-    <ClInclude Include="Libraries\mgl\SceneNode.hpp" />
+    <ClInclude Include="Libraries\mgl\SceneGraph.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="blinnPhong-fs.glsl" />

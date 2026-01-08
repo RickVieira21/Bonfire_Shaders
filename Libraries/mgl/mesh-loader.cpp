@@ -14,7 +14,7 @@
 
 #include "../mgl/mgl.hpp"
 #include "OrbitalCamera.hpp"
-#include "SceneNode.hpp"
+#include "SceneGraph.hpp"
 #include "Particle.hpp"
 #include <iostream>
 
