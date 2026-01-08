@@ -55,7 +55,7 @@ bool rightPressed = false;
 bool leftPressed = false;
 
 //Variaveis luz
-
+bool lightEnabled = true;
 mgl::Mesh* lightMesh = nullptr;
 
 //glm::vec3 lightPos = glm::vec3(10.0f, 0.0f, 0.0f); //lado
@@ -74,7 +74,6 @@ mgl::ShaderProgram* skyboxShader = nullptr;
 GLuint skyboxCubemap = 0;
 
 //Procedural
-
 mgl::Mesh* ashMesh = nullptr;
 mgl::ShaderProgram* ashShader = nullptr;
 
@@ -87,6 +86,8 @@ mgl::ShaderProgram* fireShader = nullptr;
 static const int MAX_PARTICLES = 5000;
 float fireRadius = 0.5f;
 glm::vec3 fireCenter = glm::vec3(0.0f, -0.3f, 0.0f);
+float fireIntensity = 1.0f;   
+float fireBase = 1.0f;
 
 std::vector<Particle> particles;
 GLuint particleVAO, particleVBO;
@@ -94,6 +95,12 @@ GLuint particleVAO, particleVBO;
 //Terrain
 mgl::Mesh* terrainMesh = nullptr;
 mgl::ShaderProgram* terrainShader = nullptr;
+
+//AUX
+float hashNoise(float x)
+{
+    return glm::fract(sin(x * 127.1f) * 43758.5453f);
+}
 
 
 
@@ -363,44 +370,63 @@ glm::mat4 ModelMatrix(1.0f);
 
 void MyApp::drawScene() {
 
+    //FLICKERS
     float time = (float)glfwGetTime();
 
-    // Flicker LUZ
-    float flicker =
-        0.85f +
-        0.15f * sin(time * 4.0f); //ritmo de flicker
 
-    // Flicker Stones
-    float flickerStones =
-        0.85f +
-        0.15f * sin(time * 1.5f); //ritmo de flicker
+    float tSword = time * 6.0f * fireIntensity; // velocidade flicker espada
+
+    float n1 = hashNoise(floor(tSword));
+    float n2 = hashNoise(floor(tSword) + 1.0f);
+
+    // interpolacao dos valores aleatorios
+    float flicker = glm::mix(n1, n2, glm::fract(tSword));
+
+    // limitar amplitude
+    flicker = 0.8f + 0.4f * flicker;
 
 
+    float tRest = time * fireIntensity * 0.7;
 
-    // Garantir que não vai para valores estranhos
+    float fast =  // flicker rapido 
+        glm::mix(
+            hashNoise(floor(tRest * 10.0f)),
+            hashNoise(floor(tRest * 10.0f) + 1.0f),
+            glm::fract(tRest * 10.0f)
+        );
+
+    float slow =   // flicker lento 
+        glm::mix(
+            hashNoise(floor(tRest * 2.0f)),
+            hashNoise(floor(tRest * 2.0f) + 1.0f),
+            glm::fract(tRest * 2.0f)
+        );
+
+    float flickerStones = 0.75f + 0.25f * (fast * 0.7f + slow * 0.3f) * fireIntensity * 0.7;
+
     flicker = glm::clamp(flicker, 0.8f, 1.2f);
     flickerStones = glm::clamp(flickerStones, 0.05f, 2.0f);
 
-    glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity;
-    glm::vec3 flickerLightColorAsh = lightColor * flickerStones * lightIntensity;
-    glm::vec3 flickerLightColorStones = lightColor * flickerStones * lightIntensityStones;
-    glm::vec3 flickerLightColorTerrain = lightColor * flickerStones * lightIntensityTerrain;
+    glm::vec3 flickerLightColor = lightColor * flicker * lightIntensity * fireIntensity * 1.2;
+    glm::vec3 flickerLightColorAsh = lightColor * flickerStones * lightIntensity * fireBase * fireIntensity * 0.8;
+    glm::vec3 flickerLightColorStones = lightColor * flickerStones * lightIntensityStones * fireBase * fireIntensity * 0.8;
+    glm::vec3 flickerLightColorTerrain = lightColor * flickerStones * lightIntensityTerrain * fireIntensity * 0.9;
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     Shaders->bind();
 
-    //  Luz da fogueira (posição no mundo)
+    //SWORD / GERAL
+    
+    //lightPos
     glUniform3fv(
         Shaders->Uniforms["lightPos"].index,
         1, glm::value_ptr(lightPos)
     );
 
-    //  Cor da luz (fogo)
-    glUniform3fv(
-        Shaders->Uniforms["lightColor"].index,
-        1, glm::value_ptr(flickerLightColor)
-    );
+    //lightColor
+    glUniform3fv(Shaders->Uniforms["lightColor"].index, 1, glm::value_ptr(flickerLightColor));
+
 
     //  Posição da câmara
     glm::vec3 camPos = activeCam->getPosition();
@@ -598,6 +624,7 @@ GLuint loadCubemapFromCross(const std::string& filename) {
 // ========================================  FIRE METHODS 
 
 
+
 glm::vec3 randomInCircle(float radius) {
     float angle = glm::linearRand(0.0f, glm::two_pi<float>());
     float r = sqrt(glm::linearRand(0.0f, 1.0f)) * radius;
@@ -617,7 +644,7 @@ void initParticles() {
     for (auto& p : particles) {
 
         // Posição inicial (círculo)
-        glm::vec3 offset = randomInCircle(fireRadius);
+        glm::vec3 offset = randomInCircle(fireRadius * fireBase);
         p.position = fireCenter + offset;
 
         // Distância ao centro (XZ)
@@ -627,7 +654,7 @@ void initParticles() {
         // Velocidade: centro sobe mais
         p.velocity = glm::vec3(
             (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
-            glm::mix(0.5f, 2.0f, centerFactor),
+            glm::mix(0.5f, 2.0f, centerFactor) * fireIntensity,
             (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
         );
 
@@ -682,7 +709,7 @@ void updateParticles(double elapsed) {
         if (p.life >= 1.0f) {
 
             // Renasce
-            glm::vec3 offset = randomInCircle(fireRadius);
+            glm::vec3 offset = randomInCircle(fireRadius * fireBase);
             p.position = fireCenter + offset;
 
             float radius = glm::length(glm::vec2(offset.x, offset.z));
@@ -690,7 +717,7 @@ void updateParticles(double elapsed) {
 
             p.velocity = glm::vec3(
                 (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
-                glm::mix(0.5f, 2.0f, centerFactor),
+                glm::mix(0.5f, 2.0f, centerFactor) * fireIntensity,
                 (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
             );
 
@@ -963,6 +990,31 @@ void MyApp::keyCallback(GLFWwindow* win, int key, int scancode, int action, int 
         activeCam->toggleProjection();
         Camera->setProjectionMatrix(activeCam->getProjectionMatrix((float)width / height));
     }
+
+    // ==================== FOGO ====================
+
+    //intensity
+    if ((key == GLFW_KEY_UP) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        fireIntensity += 0.05f;
+    }
+
+    if ((key == GLFW_KEY_DOWN) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        fireIntensity -= 0.05f;
+    }
+
+    fireIntensity = glm::clamp(fireIntensity, 0.7f, 2.2f);
+
+
+    //base
+    if ((key == GLFW_KEY_RIGHT) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        fireBase += 0.05f;
+    }
+
+    if ((key == GLFW_KEY_LEFT) && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+        fireBase -= 0.05f;
+    }
+
+    fireBase = glm::clamp(fireBase, 0.5f, 1.5f);
 }
 
 
