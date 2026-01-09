@@ -540,10 +540,15 @@ void MyApp::drawScene() {
         1, glm::value_ptr(lightPos)
     );
 
+
+    glm::vec3 effectiveTerrainLightColor = lightEnabled ? flickerLightColorTerrain : glm::vec3(0.0f);
+
     glUniform3fv(
         terrainShader->Uniforms["lightColor"].index,
-        1, glm::value_ptr(flickerLightColorTerrain)
+        1, glm::value_ptr(effectiveTerrainLightColor)
     );
+
+
 
     glUniform3fv(
         terrainShader->Uniforms["viewPos"].index,
