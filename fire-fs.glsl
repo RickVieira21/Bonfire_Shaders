@@ -25,7 +25,7 @@ void main()
 
     // Se a particula ainda é nova (mais perto do centro) mistura do laranja para o branco
     if (life > 0.6)
-        color = mix(midColor, innerColor, (life - 0.6) / 0.4);
+        color = mix(midColor, innerColor, (life - 0.6) / 0.4); //not rly used
     else
     // Se é mais velha (mais no exterior) mistura do vermelho para o laranja
         color = mix(outerColor, midColor, life / 0.6);

@@ -35,7 +35,7 @@ float hash(float n) {
 
 void main() {
 
-    // -------------------- FLICKER --------------------
+    // -------------------- FLICKER (SWAY) --------------------
 
     // Tempo acelerado para tornar o flicker mais dinamico
     float t = time * 2.5;
@@ -51,7 +51,7 @@ void main() {
     float swayX = sin(t + rnd * 6.2831) * flickerStrength;
     float swayZ = cos(t * 0.7 + rnd * 6.2831) * flickerStrength;
 
-    // Posicao final da particula 
+    // (centro) Posicao final da particula 
     vec3 pos = gl_in[0].gl_Position.xyz + vec3(swayX, 0.0, swayZ);
 
     // -------------------- TAMANHO --------------------
@@ -59,7 +59,7 @@ void main() {
     // Tamanho do billboard: grande no inicio, pequeno no fim da vida
     float size = mix(0.3, 0.001, vLife[0]);
 
-    // Vetores right e up da camera para billboarding
+    // orientacao do quad
     vec3 right = vec3(ViewMatrix[0][0], ViewMatrix[1][0], ViewMatrix[2][0]) * size;
     vec3 up    = vec3(ViewMatrix[0][1], ViewMatrix[1][1], ViewMatrix[2][1]) * size;
 

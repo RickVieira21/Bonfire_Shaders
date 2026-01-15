@@ -1,10 +1,10 @@
 #version 330 core
 
 // ==================== INPUTS ====================
-// Posição do fragmento em espaço de mundo (vinda do vertex shader)
+// Posição do fragmento em world (vinda do vertex shader)
 in vec3 exPosition;
 
-// Normal interpolada em espaço de mundo
+// Normal interpolada em world space
 in vec3 exNormal;
 
 // Cor final do fragmento
@@ -31,22 +31,22 @@ uniform float shininess;
 
 // ==================== FUNÇÕES DE NOISE ====================
 
-// Função hash simples para aleatoriedade a partir da posição
+// Função hash simples para aleatoriedade a partir da posição (entre 0 e 1) e é determinístico
 float hash(vec3 p) {
     return fract(
         sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453
     );
 }
 
-// Noise 3D suave (value noise interpolado), Usado para gerar padrões orgânicos sem texturas
+// Noise 3D suave (value noise interpolado)
 float noise(vec3 p) {
-    vec3 i = floor(p);   // célula inteira
-    vec3 f = fract(p);   // posição dentro da célula
+    vec3 i = floor(p);   // célula inteira - qual o cubo
+    vec3 f = fract(p);   // posição dentro da célula - onde dentro do cubo (0 a 1)
 
-    // Suavização cúbica (smoothstep manual)
+    // Suavização cúbica (evita transições)
     f = f * f * (3.0 - 2.0 * f);
 
-    // Valores nos 8 cantos do cubo
+    // Cada canto do cubo recebe um valor aleatório fixo
     float n000 = hash(i + vec3(0,0,0));
     float n100 = hash(i + vec3(1,0,0));
     float n010 = hash(i + vec3(0,1,0));
@@ -85,10 +85,10 @@ vec3 proceduralAsh(vec3 pos) {
     // Mix: mais grão, mas ainda se vê base
     float ash = mix(base, grain, 0.65);
 
-    // Escurecer ligeiramente para parecer cinza queimada
+    // Escurecer ligeiramente para parecer cinza queimada (+alto -> +luz)
     ash *= 0.85;
 
-    // Paleta da ash
+    // cores da ash
     vec3 darkAsh  = vec3(0.05, 0.05, 0.06); // cinza escuro
     vec3 midAsh   = vec3(0.65, 0.65, 0.67); // cinza médio
     vec3 lightAsh = vec3(0.92, 0.92, 0.92); // quase branco

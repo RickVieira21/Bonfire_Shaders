@@ -33,13 +33,14 @@ public:
 
     //antes de desenhar, enviamos os dados ao shader - “automatically handles matrices”
     void draw(const glm::mat4& parentMatrix) {
-        glm::mat4 globalMatrix = parentMatrix * modelMatrix;
+        //transformação global cada no
+        glm::mat4 globalMatrix = parentMatrix * modelMatrix; 
 
-        //“handles shaders”
+        
         if (mesh && shader) {
             shader->bind();
 
-            // Model matrix
+            // Model matrix (enviar para o shader)
             GLint modelId = shader->Uniforms[mgl::MODEL_MATRIX].index;
             if (modelId >= 0) {
                 glUniformMatrix4fv(
@@ -48,13 +49,13 @@ public:
                 );
             }
 
-            // Base color
+            // Base color (enviar para o shader)
             GLint colorId = shader->Uniforms["baseColor"].index;
             if (colorId >= 0) {
                 glUniform3fv(colorId, 1, glm::value_ptr(color));
             }
 
-            // Material uniforms
+            // Material uniforms (enviar para o shader)
             GLint ambId = shader->Uniforms["ambientStrength"].index;
             GLint specId = shader->Uniforms["specularStrength"].index;
             GLint shinId = shader->Uniforms["shininess"].index;

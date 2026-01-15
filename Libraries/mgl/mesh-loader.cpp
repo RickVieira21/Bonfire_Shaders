@@ -501,6 +501,7 @@ void MyApp::drawScene() {
         fireShader->bind();
         glUniform1f(fireShader->Uniforms["time"].index, time);
 
+        //BLEND ADITIVO
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         glDepthMask(GL_FALSE);
@@ -585,14 +586,14 @@ GLuint loadCubemapFromCross(const std::string& filename) {
         return 0;
     }
 
-    int faceSize = width / 4;
-    GLenum format = (channels == 4) ? GL_RGBA : GL_RGB;
+    int faceSize = width / 4; //tamanho de cada face
+    GLenum format = (channels == 4) ? GL_RGBA : GL_RGB; //Define se a textura usa 3 ou 4 canais
 
     GLuint texID;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
 
-    // offsets (x, y) das faces na imagem
+    // posições das faces na imagem cross
     struct Face { int x, y; };
     Face faces[6] = {
         {2, 1}, // +X (right)
@@ -604,20 +605,21 @@ GLuint loadCubemapFromCross(const std::string& filename) {
     };
 
     for (int i = 0; i < 6; i++) {
-        unsigned char* faceData = new unsigned char[faceSize * faceSize * channels];
+        unsigned char* faceData = new unsigned char[faceSize * faceSize * channels]; //buffer temporário
 
         for (int y = 0; y < faceSize; y++) {
             for (int x = 0; x < faceSize; x++) {
-                int srcX = faces[i].x * faceSize + x;
-                int srcY = faces[i].y * faceSize + y;
-
+                int srcX = faces[i].x * faceSize + x; //Copiar os pixels da imagem original
+                int srcY = faces[i].y * faceSize + y; //convertendo coord. locais da face para globais da imagem cross
+                 
                 for (int c = 0; c < channels; c++) {
-                    faceData[(y * faceSize + x) * channels + c] =
+                    faceData[(y * faceSize + x) * channels + c] = //copia canal a canal
                         data[(srcY * width + srcX) * channels + c];
                 }
             }
         }
 
+        //Enviar a face para o OpenGL
         glTexImage2D(
             GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
             0, format,
@@ -631,6 +633,7 @@ GLuint loadCubemapFromCross(const std::string& filename) {
 
     stbi_image_free(data);
 
+    //Definir parâmetros da textura para cubemap (evita bordas)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -647,9 +650,10 @@ GLuint loadCubemapFromCross(const std::string& filename) {
 
 
 glm::vec3 randomInCircle(float radius) {
-    float angle = glm::linearRand(0.0f, glm::two_pi<float>());
-    float r = sqrt(glm::linearRand(0.0f, 1.0f)) * radius;
+    float angle = glm::linearRand(0.0f, glm::two_pi<float>());  //ângulo aleatório (0 e 2pi) - direção horizontal da particula
+    float r = sqrt(glm::linearRand(0.0f, 1.0f)) * radius;       //distribuição uniforme em área
 
+    //Conversão de coordenadas polares para cartesianas
     return glm::vec3(
         cos(angle) * r,
         0.0f,
@@ -683,12 +687,15 @@ void initParticles() {
         p.life = glm::mix(0.6f, 0.3f, centerFactor);
     }
 
+    //Criar VAO e VBO
     glGenVertexArrays(1, &particleVAO);
     glGenBuffers(1, &particleVBO);
 
+    //Ligar VAO e VBO
     glBindVertexArray(particleVAO);
     glBindBuffer(GL_ARRAY_BUFFER, particleVBO);
 
+    //Enviar dados das particulas para o GPU
     glBufferData(
         GL_ARRAY_BUFFER,
         particles.size() * sizeof(Particle),
@@ -725,24 +732,24 @@ void updateParticles(double elapsed) {
 
     for (auto& p : particles) {
 
-        p.life += dt * 0.7f; //ALTURA DA CHAMA
+        p.life += dt * 0.7f; //(Atualização da vida) ALTURA/VELOCIDADE DA CHAMA
 
+        // Renascimento
         if (p.life >= 1.0f) {
-
-            // Renasce
-            glm::vec3 offset = randomInCircle(fireRadius * fireBase);
+            
+            glm::vec3 offset = randomInCircle(fireRadius * fireBase);  //nova posicao inicial
             p.position = fireCenter + offset;
 
             float radius = glm::length(glm::vec2(offset.x, offset.z));
             float centerFactor = 1.0f - glm::clamp(radius / fireRadius, 0.0f, 1.0f);
 
             p.velocity = glm::vec3(
-                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor),
-                glm::mix(0.5f, 2.0f, centerFactor) * fireIntensity,
-                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)
+                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor), //x
+                glm::mix(0.5f, 2.0f, centerFactor) * fireIntensity,               //y
+                (rand() / float(RAND_MAX) - 0.5f) * 0.3f * (1.0f - centerFactor)  //z
             );
 
-            p.life = glm::mix(0.6f, 0.3f, centerFactor);
+            p.life = glm::mix(0.6f, 0.3f, centerFactor); //Nova vida depende do centerFactor
         }
 
         p.position += p.velocity * dt;
