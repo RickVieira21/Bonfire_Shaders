@@ -1,0 +1,1 @@
+Project developed in OpenGL, recreating the iconic bonfire from Dark Souls scene using custom-written shaders only. The project features Blinn-Phong lighting, a GPU-based particle system for the fire effects, and procedural materials to achieve stylized surfaces. All created without relying on external rendering engines.
